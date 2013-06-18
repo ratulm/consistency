@@ -1,0 +1,148 @@
+\documentclass{sig-alternate-10pt-2013}
+\usepackage[usenames,dvipsnames]{color}
+\definecolor{mycitegreen}{RGB}{0,90,0}
+\definecolor{myrefblue}{RGB}{90,0,0}
+\definecolor{cyred}{RGB}{140,0,0}
+\definecolor{commentgreen}{RGB}{0,80,0}
+\usepackage[draft=true, final=true, colorlinks=true, citecolor=mycitegreen, linkcolor=myrefblue, anchorcolor=myrefblue, pagebackref=false]{hyperref}
+\usepackage{graphics,enumitem}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{floatrow}
+\usepackage[font={bf,small}]{caption}
+\usepackage[captionskip=0pt, font={small,bf}, farskip=2pt]{subfig}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{color}
+\usepackage{url}
+\usepackage{xspace}
+\let\proof\relax
+\let\endproof\relax
+\usepackage{amsthm}
+\usepackage{boxedminipage}
+
+%\usepackage[charter]{template/mathdesign/mathdesign}
+%\usepackage{MinionPro}
+%\setlength{\textheight}{9.4in}
+%setlength{\textheight}{9.25in}
+%\setlength{\textwidth}{6.75in}
+%\setlength{\columnsep}{.33in}
+%\usepackage[]{geometry}
+
+% Compact itemize and enumerate.  Note that they use the same counters and
+% symbols as the usual itemize and enumerate environments.
+\def\compactify{\itemsep=0pt \topsep=0pt \partopsep=0pt \parsep=0pt}
+ \let\latexusecounter=\usecounter
+ \newenvironment{CompactItemize}
+   {\def\usecounter{\compactify\latexusecounter}
+    \begin{itemize}}
+   {\end{itemize}\let\usecounter=\latexusecounter}
+ \newenvironment{CompactEnumerate}
+   {\def\usecounter{\compactify\latexusecounter}
+    \begin{enumerate}}
+   {\end{enumerate}\let\usecounter=\latexusecounter}
+
+%\baselineskip=12.1bp
+%\showthe\baselineskip
+
+\setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+
+\makeatletter
+\newif\if@restonecol
+\makeatother
+\let\algorithm\relax
+\let\endalgorithm\relax
+\usepackage[figure,vlined]{algorithm2e}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{On Consistency in Software Defined Networks}
+
+\numberofauthors{1}
+\author{
+Paper \#XX, YY pages
+}
+
+\begin{document}
+
+\maketitle
+%\baselineskip=12bp
+
+% Paragraph Highlight
+\newcommand{\paragraphb}[1]{\vspace{0.03in}\noindent{\bf #1} }
+\newcommand{\paragraphe}[1]{\vspace{0.03in}\noindent{\em #1} }
+\newcommand{\paragraphbe}[1]{\vspace{0.03in}\noindent{\bf \em #1} }
+
+% Comment colors
+%\newcommand{\comment}{\textcolor{black}}
+\newcommand{\prooffontsize}{\fontsize{8pt}{9.3pt}\selectfont}
+\newcommand{\cready}{\textcolor{black}}
+\newcommand{\newcomment}{\textcolor{black}}
+
+%\newcommand{\cy}{\textcolor{cyred}{[CY-FIXME]}~\textcolor{cyred}}
+%\newcommand{\cycomment}{\textcolor{cyred}}
+\newcommand{\cycomment}{\textcolor{black}}
+%\newcommand{\matt}[1]{{{#1}}}
+%\newcommand{\matt}[1]{{\color{blue}{#1}}}
+\newcommand{\matt}[1]{{\color{black}{#1}}}
+%\newcommand{\mattc}[1]{{\color{blue}\bf\em{}}}
+%\newcommand{\mattc}[1]{{\color{blue}\bf\em{[matt: #1]}}}
+\newcommand{\codecomment}{\textcolor{commentgreen}}
+%\newcommand{\pbg}{\textcolor{green}}
+
+
+\newcommand{\swan}{\normalsize S{\small WAN}\xspace}
+\newcommand{\swansmall}{\small S{\scriptsize WAN}\xspace}
+\newcommand{\cflow}{Vflow\xspace}
+\newcommand{\flow}{vflow\xspace}
+\newcommand{\flows}{vflows\xspace}
+
+\newcommand{\topolarge}{\textsf{IDN}\xspace}
+\newcommand{\toposmall}{\textsf{G-Scale}\xspace}
+
+\newcommand{\corule}{Rule\xspace}
+\newcommand{\orule}{rule\xspace}
+\newcommand{\orules}{rules\xspace}
+
+\newcommand{\cpr}{Service\xspace}
+\newcommand{\pr}{service\xspace}
+
+\newcommand{\cprops}{Service properties\xspace}
+\newcommand{\props}{service properties\xspace}
+
+\newcommand{\trurl}{\url{http://somewhere}}
+
+% To make the FIXMEs go away, comment out this line...
+\newcommand{\fixme}[1]{{\bf\textcolor{red}{[#1]}}}
+% ...and uncomment this one.
+%\newcommand{\fixme}[1]{}
+
+\newcommand{\helpme}[1]{{\bf\textcolor{red}{#1}}}
+
+\newcommand{\figtocapskip}{\vspace{-6pt}}
+\newcommand{\figtocapbigskip}{\vspace{-9pt}}
+%\newcommand{\interfigskip}{\vspace{-12pt}}
+%\newcommand{\listskip}{\vspace{-5pt}}
+%\newcommand{\listskips}{\vspace{-3pt}}
+%\newcommand{\algindent}{\hspace{13pt}}
+
+\theoremstyle{definition}
+\newtheorem{lemma}{Lemma}
+
+
+\begin{sloppypar}
+\input{intro}
+{
+\scriptsize
+%\vspace{5pt}
+\baselineskip=7.685bp
+\bibliographystyle{abbrv}
+\bibliography{paper}
+}
+%\bibliographystyle{plain}
+
+\end{sloppypar}
+\end{document}
+
+
