@@ -1,2 +1,31 @@
 \section{Introduction}
 \label{sec:intro}
+
+1.	SDNs are receiving a lot of attention in the research and practitioner communities.
+
+2.	Looking back the seminal papers, key motivations for SDNs were
+a.	Simplify dynamic behavior of protocols (e.g., possibility for loops and overloads created during the period in which routing protocols are converging)
+b.	Maintain consistency across concerns spread across different layers (e.g., firewall policies should be in sync with routing policy as routing changes)
+
+3.	However, as researchers are looking more closely at SDNs, we are learning that the story is not that straightforward.  While centralized computation of SDNs makes it much easy to devise globally consistent or efficient routing policies, it does not by itself solve the fundamental issue of consistency during changes in policy.  For example:
+a.	SWAN shows temporary overload can occur
+b.	Atomic updates shows that firewall policies can be violated
+
+4.	While individual papers have uncovered problems specific to their context, we take a holistic view of the design space.
+
+5.	First, we outline a spectrum of consistency properties:
+a.	Drop-freedom
+b.	Loop-freedom
+c.	Per-pkt consistency
+d.	Capacity consistency
+e.	…..
+
+6.	Consistently migrating requires a careful planning of the order in which rules can be installed in the network. This means a dependence in which certain rules should be applied only after certain other rules have been applied.  Based on the observation, we outline a spectrum of the types of possible dependencies:
+a.	None
+b.	Downstream of the path
+c.	Entire network
+
+7.	Greater dependence slows transition. But certain consistency properties inherently require a minimum degree of dependence. We fill out the table …
+
+8.	We propose new transition algorithms along the way
+
