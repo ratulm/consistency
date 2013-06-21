@@ -1,13 +1,13 @@
-\section{Loop-Free}
+\section{Loop-Freedom}
 \label{sec:loop-free}
 
 \subsection{Example}
 \label{sec:example}
 
 \begin{figure}[t!]
-\label{fig:example}
 \includegraphics[width=3in]{figures/noloops.png}
 \caption{Running example, discussed in Section \ref{sec:example}.}
+\label{fig:example}
 \end{figure}
 
 Applying routing updates in a way that guarantees no loops is a basic but already interesting consistency property. Consider the five node example network with a single destination $d$ in Figure \ref{fig:example}. The existing routing to destination $d$ on the left of the figure should be updated according to the right of the figure. A naive way to update is to simply send out the forwarding updates (e.g., ``node $u$: for destination $d$ send to $x$''). However, when doing so, it might happen that node $x$ updates its rule before node $y$, introducing a routing loop between nodes $x$ and $y$. This loop will eventually disappear, namely once node $y$ updates its rule, but in an asynchronous system it is difficult to give guarantees when this will happen.
@@ -24,30 +24,34 @@ We will show two solutions, one with advantages regarding practice as the parent
 A node $p$ is a parent of a child node $c$ in the dependency forest if $c$ points to $p$ according to the new rules, e.g. $x$ is a parent of $u$ and $v$. Now, starting at the root, nodes first switch to the new rule, and then inform all their children in the dependency tree to switch as well. Apart from the packets-in-transit problem described above, correctness is immediate: Nodes that are in the dependency tree of the destination will only switch to the new rule once all the nodes on the new path to the destination have already switched. Based on the discussion on the example, it is easy to see that this solution is not minimal, as node $v$ cannot switch immediately, after learning the new rule, but must wait on $x$.
 
 \begin{figure}[t!]
-\label{fig:minimal}
 \includegraphics[width=3in]{figures/nominimum.png}
 \caption{Example with two orthogonal minimal solutions, discussed in Section \ref{sec:minimal}.}
+\label{fig:minimal}
 \end{figure}
 
 One may wish for a protocol which is as fast as possible, in the sense that dependencies are minimum. Quite
-surprisingly, in general this is not trivial. Consider the four node example network in Figure \ref{fig:minimal}, again with the old rules on the left, and the new rules on the right. Node $w$ may switch to the new rule immediately. However, nodes $u$ and $v$ are more intricate. If they both switch to the new rule immediately, and $w$ is still using the old rule, we introduced a loop. So one of them must wait for $w$ having switched. However, either one is fine, i.e. either $u$ must wait for $w$ (and $v$ may switch immediately), \emph{or} $v$ must wait for $w$ (and $u$ may switch immediately). If we switch the rules of node $u$ in the example in Figure \ref{fig:minimal}, such that \texttt{u.old = w} and \texttt{u.new = d}, we have another interesting case: Now, in order to prevent a loop, node $v$ must wait, but node $v$ may wait for either node $u$ \emph{or} node $w$. These examples show that optimality is a non-trivial concept that deserves further research.
-
-
+surprisingly, in general this is not trivial. Consider the four node example network in Figure \ref{fig:minimal}, again with the old rules on the left, and the new rules on the right. Node $w$ may switch to the new rule immediately. However, nodes $u$ and $v$ may not. If they both switch to the new rule immediately, and $w$ is still using the old rule, we introduced a loop. So one of them must wait for $w$ having switched. However, either one is fine, i.e. either $u$ must wait for $w$ (and $v,w$ may switch immediately), \emph{or} $v$ must wait for $w$ (and $u,w$ may switch immediately). If we switch the rules of node $u$ in the example in Figure \ref{fig:minimal}, such that \texttt{u.old = w} and \texttt{u.new = d}, we have another interesting case: Now, in order to prevent a loop, node $v$ must wait, but node $v$ may wait for either node $u$ \emph{or} node $w$. These examples show that optimality is a non-trivial concept that deserves further research.
 
 \subsection{Minimal Protocol}
 \label{sec:minimal}
 
-Instead, in the following, we will present a protocol which is \emph{minimal} regarding its dependencies. TODO: explain minimality. As the example in Figure \ref{fig:example} shows, there may be many nodes that can switch immediately. As such the dependency tree turns into a \emph{dependency forest}. As before, in this dependency forest, parents will inform their children when it is safe to use the new rule. The only difference is that the dependency forest is cut to its bare minimum. For simplicity, we first describe the protocol as if there was just a single destination $d$. We later discuss the case where we have multiple destinations.
+Instead, in the following, we will present a protocol which is \emph{minimal} regarding its dependencies, in the sense that no node can improve its dependencies without some other node getting worse. As the example in Figure \ref{fig:example} shows, often there may be many nodes that can switch immediately, for different reasons. As such the dependency tree turns into a \emph{dependency forest}. As before, in this dependency forest, parents will inform their children when it is safe to use the new rule. The only difference is that the dependency forest is minimal, in the sense that one cannot remove a subtree of the forest with subtree root $c$ (and parent $p$) and re-attach it at a parent of $p$, or make $c$ a root of the forest. For simplicity, we first describe the protocol as if there was just a single destination $d$. We later discuss the case where we have multiple destinations.
 
-We need to define \emph{good} and \emph{bad} nodes as follows: The destination $d$ is by definition good. All other nodes $u$ are defined as good or bad regarding the node $v$ at the end of the new forwarding rule \texttt{u.new = v}. If all paths (mixing new and not yet discarded old rules arbitrarily) of $v$ point to the same node $r$ (possibly $r = d$), without loop, then $u$ is good. Else ($v$ has a path that points into a loop before all paths reach some node $r$) $u$ is bad.
+We need to define \emph{good} and \emph{bad} nodes as follows: good nodes are nodes that can use both old and new rules, without introducing a loop. Bad nodes on the other hand must stick to the old rule until being told so, or they will introduce a loop. Since the destination does not have any rules, neither old nor new, it is by definition good.
 
-The algorithm to construct the dependency forest is as follows: Initially, we let all good nodes to be roots of the dependency forest. Then, iteratively, while not all nodes are processed, we process an arbitrary good node $u$ by removing its old rule. Removing $u$'s old rule might turn other nodes good; if $v$ turns good when processing $u$, then $v$ is a child of $u$ in the dependency forest.
+The algorithm constructs the dependency forest as follows: We start out with only the old rules, by definition a loop-free in-tree to destination $d$. Now, for each node $u$, we test whether adding $u$'s new rule will introduce a loop. If not, node $u$ is good, and added as a root in the dependency forest. On the other hand, if $u$'s new rule introduces a loop, node $u$ is bad, and must wait until we find its parent in the dependency forest. The initialization is completed after we found all the roots (which are now leaves in the dependency forest). Next we add the children to the dependency forest, one after another. In each step, we choose a not yet processed dependency forest leaf node $u$. We remove $u$'s old rule from the network, and then cycle through all the nodes, trying to find nodes $v$ that became good thanks to removing $u$'s old rule. If we find such a node $v$, then node $v$ is a child of $u$ in the dependency forest, and a new leaf. If no such node $v$ exists, node $u$ remains a childless leaf of the dependency forest. We continue until we processed all nodes in the network.
 
-TODO: explain Tarjan in simple terms. \cite{reference_1_in_http://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm}
+At the heart of this algorithm is the simple loop-finder of Tarjan \cite{reference_1_in_http://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm} which can be implemented linearly in the size of the network. Since we must process each node, and check for each not yet processed node, the total time of the algorithm is cubic in the size of the network. We suspect that this running time can be improved, but this is outside the scope of this paper. Clearly, the order in which the nodes are visited will determine the dependency forest, however, we will guarantee that no matter what the order is, the dependency tree is minimal.
+
+TODO: alternative formulation, maybe better: Initially, we let all good nodes to be roots of the dependency forest. Then, iteratively, while not all nodes are processed, we process an arbitrary good node $u$ by removing its old rule. Removing $u$'s old rule might turn other nodes good; if $v$ turns good when processing $u$, then $v$ is a child of $u$ in the dependency forest.
+
+TODO: explain Tarjan in simple terms. 
 
 \subsection{Proofs} %TODO: should probably not be a subsection, just did that for navigability.
 
-In the following, we prove a few simple lemmas, which show that (i) the dependency forest is correct and (ii) optimal in the sense that if any node switches to the new rule before the parent in the dependency forest says so, a packet might be experiencing a loop.
+In the following, we prove a few simple lemmas, which show that (i) the dependency forest is correct and (ii) minimal in the sense that if any node switches to the new rule before the parent in the dependency forest says so, a packet might be experiencing a loop.
+
+(TODO: must carefully go over these lemmas and adapt them to the new algorithm; some will not be correct anymore, or not even needed anymore, while others might be missing...)
 
 Lemma 1: A processed node remains good.
 
@@ -99,6 +103,10 @@ While not all nodes are processed
 	For all bad nodes v:
 		If processing u made v good, then v.parent = u
 
-[TODO: Remark: This also works with more than two trees, i.e. with multiple versions of old trees and one new tree. Should I describe a more direct algorithm, an algorithm that does recognize good and bad without calling the Tarjan loop discovery subroutine? What about the failures? In several versions, what happens if a node just does not ack the changes of old versions? Will it become a leaf?]
+[TODO: Remark: Should I describe a more direct algorithm, an algorithm that does recognize good and bad without calling the Tarjan loop discovery subroutine?]
+
+-- some old snippets of the old algorithms/proofs --
+
+All other nodes $u$ are defined as good or bad regarding the node $v$ at the end of the new forwarding rule \texttt{u.new = v}. If all paths (mixing new and not yet discarded old rules arbitrarily) of $v$ point to the same node $r$ (possibly $r = d$), without loop, then $u$ is good. Else ($v$ has a path that points into a loop before all paths reach some node $r$) $u$ is bad.
 
 
