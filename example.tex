@@ -45,31 +45,37 @@ At the heart of this algorithm is the simple loop-finder of Tarjan \cite{referen
 
 TODO: alternative formulation, maybe better: Initially, we let all good nodes to be roots of the dependency forest. Then, iteratively, while not all nodes are processed, we process an arbitrary good node $u$ by removing its old rule. Removing $u$'s old rule might turn other nodes good; if $v$ turns good when processing $u$, then $v$ is a child of $u$ in the dependency forest.
 
-TODO: explain Tarjan in simple terms. 
+TODO: explain Tarjan in simple terms.
 
 \subsection{Proofs} %TODO: should probably not be a subsection, just did that for navigability.
 
 In the following, we prove a few simple lemmas, which show that (i) the dependency forest is correct and (ii) minimal in the sense that if any node switches to the new rule before the parent in the dependency forest says so, a packet might be experiencing a loop.
 
-(TODO: must carefully go over these lemmas and adapt them to the new algorithm; some will not be correct anymore, or not even needed anymore, while others might be missing...)
 
-Lemma 1: A processed node remains good.
+Lemma 1: A good node remains good.
 
-Proof: Since the process only removes old pointers but does not introduce new pointers, new loops cannot will not be introduced during the process, and already good nodes will remain good.
+Proof: We only add new links to the network once we verified that there are no loops (for all nodes). So once a node was considered good, it stays good.
 
-Lemma 2: Every node is eventually processed.
 
-Proof: Take any unprocessed node. We follow the new pointer until we find a pair $u,v$ with \texttt{u.new = v}, $u$ is not yet processed, and $v$ is processed. Since the root of the new pointer in-tree is already processed at the start of the algorithm, and we started at an unprocessed node, such a pair must exist. Because of Lemma 1, node $v$ is good, and as such node $u$ can be processed.
+Lemma 2: The dependency forest is loop-free. 
 
-Lemma 3: The process produces a dependency forest.
+Proof: Whenever only add good nodes to the dependency forest. Because Lemma 1, the final dependency forest is loop-free.
 
-Proof: Initially good nodes are the roots. If a node $u$ is processed later than a node $v$, then $v$ cannot point to $u$. Listing all the nodes in the order of processing as such only gives parent pointers in one direction, towards the past. As such the produced dependency structure cannot have cycles.
+Lemma 3: Every node is in the dependency forest.
 
-Lemma 4: The process is correct/sufficient (and produces no loops).
+Proof: Once a node is becoming good and added to the dependency forest, it can also be processed, since processing only removes a rule, and hence cannot introduce a loop. Likewise, every node will eventually become good. TODO: ... continue...
+
+--- TODO ---
+
+Lemma 2: Every node is eventually good (and can be processed).
+
+Proof: Take any bad node. We follow the new rules towards the destination $d$ until we find a pair $u,v$ with \texttt{u.new = v}, $u$ is bad, and $v$ is good. Since the destination $d$ is good at the start of the algorithm, and we started at a bad node, such a pair must exist. TODO... here something is missing...
+
+Lemma 3: The process is correct/sufficient (and produces no loops).
 
 Proof: For the sake of contradiction, assume that there is a packet which is sent into a loop. The loop must consist of at least one new pointer, call that \texttt{u.new}, as the old pointers alone do not contain a loop. In other words, node $u$ in the loop deleted its old pointer because it was (and remained, see Lemma 1) good. On the other hand, \texttt{u.new} is on a path that points to node $u$, which is a loop. This is the definition of $u$ being bad. As node $u$ cannot be good and bad at the same time, we have a contradiction.
 
-Lemma 5: The process is optimal/necessary/minimal (no node could flip earlier).
+Lemma 4: The process is optimal/necessary/minimal (no node could flip earlier).
 
 Proof: If nodes can flip immediately, they are by definition optimal, and as such the roots of the dependency forest are optimal. So let us look instead at child node $c$, which must wait for parent $p$ in the dependency tree. Node $c$ becomes good once parent $p$ removes its old pointer, before node $c$ was bad. This means that \texttt{p.old} pointed to a loop, which was removed when \texttt{p.old} was removed. In other words, by definition node $c$ could not switch to the new pointer at any earlier stage, without risking sending a packet on into a loop.
 
@@ -109,4 +115,6 @@ While not all nodes are processed
 
 All other nodes $u$ are defined as good or bad regarding the node $v$ at the end of the new forwarding rule \texttt{u.new = v}. If all paths (mixing new and not yet discarded old rules arbitrarily) of $v$ point to the same node $r$ (possibly $r = d$), without loop, then $u$ is good. Else ($v$ has a path that points into a loop before all paths reach some node $r$) $u$ is bad.
 
+Lemma 3: The process produces a dependency forest. (this seems to be obvious now.)
 
+Proof: Initially good nodes are the roots. If a node $u$ is processed later than a node $v$, then $v$ cannot point to $u$. Listing all the nodes in the order of processing as such only gives parent pointers in one direction, towards the past. As such the produced dependency structure cannot have cycles.
