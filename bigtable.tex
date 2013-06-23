@@ -2,7 +2,7 @@
 \begin{center}
 \begin{tabular}{c|c|p{1in}|p{1in}|p{1in}|}
 &
-  \textbf{No dependence}
+  \textbf{None}
 &
   \textbf{Downstream subset}
 &
@@ -12,6 +12,10 @@
 \ \\ \hline
 
   \textbf{Drop freedom}
+&
+  Add before remove
+&
+&
 &
 \ \\ \hline
 
@@ -52,3 +56,55 @@
 \section{Consistency space}
 \label{sec:table}
 
+The previous section focuses on one consistency property, namely loop freedom, to expose the algorithmic subtleties in maintaining consistency properties during updates. This section takes a broader view of the space of consistency properties, and it outlines the dependency structure among switches that is needed for satisfying them.
+
+Table~\ref{tbl:big} helps frame this discussion. Its rows correspond to consistency properties and columns correspond to dependency properties that denote when a new rule can be installed. The cells denote if an algorithm exists to update the network while satisfying the corresponding the consistency property and relying on the corresponding dependency structure.
+
+We define the consistency properties listed in Table~\ref{tbl:big} as follows.
+
+\begin{itemize}
+
+\item
+\textbf{Drop freedom} No packet should be dropped during updates. Drops can occur if a switch does not have a rule to handle a packet and is not configured to send packets that do not match any rule to the controller (as is the case for large-scale networks such as wide area backbones and data centers).
+
+\item
+\textbf{Loop freedom} There should be no loops during updates, where we define a loop as a packet (without any transformation) visiting an interface multiple times.
+    
+\item
+\textbf{Packet coherence} The set of rules seen by a packet should not be a mix of old and new rules; they should be all old or all new rules.
+
+\item
+\textbf{Link capacity observance} The amount of traffic arriving at a link should not be greater than its capacity. Drop freedom is implicit in this definition; otherwise, a trivial way to meet link capacity constraints is by dropping packets.
+
+\end{itemize}
+
+The consistency properties are listed in rough order of strength, that is, satisfying a property lower on the list satisfies properties above it. For instance, guaranteeing packet coherence automatically guarantees drop freedom and loop freedom, assuming that neither the set of old rules nor the set of new rules lead to packet drops or loops. Similarly, guaranteeing link capacity observance guarantees drop freedom (by definition). It also guarantees loop freedom \ratul{are we confident?} because capacity constraints cannot be met in the presence of loops.  However, we are not able to totally order these properties. Satisfying either packet coherence or link capacity observance does not guarantee the satisfaction of the other.
+
+The consistency properties in the table are not the only ones of interest. Different networks or applications may require different consistency guarantees (e.g., flow coherence: the set of rules seen a flow should not be a mix of old and new rules) or a consistency guarantee that is a mix of those listed (e.g., packet coherence + link capacity coherence). We chose these consistency properties because they are basic, "natural" properties.
+
+We define the dependency structures listed in Table~\ref{tbl:big} as follows.
+
+\begin{itemize}
+
+\item
+\textbf{None} Installing and using a new rule at a switch does not need to wait for updates to be completed at any other switch.
+
+\item
+\textbf{Downstream subset} Installing and using a new rule at a switch needs to wait for certain rules to be installed at a subset of switches that lie on the downstream for the packets that use the rule.
+
+\item
+\textbf{Downstream all} Installing and using a new rule at a switch needs to wait for certain rules to be completed at all switches that lie downstream for the packets that use the rule.
+
+\item
+\textbf{Off-path} Installing and using a new rule at a switch needs to wait for updates at even at switches that are not on the paths for packets that use the rule.
+
+\end{itemize}
+
+Two characteristics of these dependency properties are worth mentioning. First, the dependencies are with respect to rules, not switches. At a level of switches dependencies will frequently be circular, where Switch $A$ depends on Switch $B$ with respect to some rules and Switch $B$ depends on Switch $A$ with respect to other rules.
+
+Second, the dependencies capture when rules can be installed and used, not when the network has fully transitioned to the new rules. In particular, even after all the new rules are installed and the network is carrying traffic as per the new rules, the set of rules in the network may not be identical to the desired set of new rules. Some additional (unused, low-priority) rules may still be present in the network. Such rules will be removed in a clean-up phase. Our dependency definition does not consider this clean-up phase but focuses on what it takes to get the network carrying traffic as per the new rules.
+
+Finally, let us focus on the cells in the table. As networking researchers, our goal is to find algorithms that satisfy a given consistency property with as few dependencies as possible, that is, as much to the left as possible. 
+
+\ratul{this is shaky?}
+However, the best case---an algorithm that does not require any dependency---exists only for the weakest consistency property---drop freedom. This can be achieved using a simple method in which we install new rules in switches before removing any old rules. When installed as having higher priority, the new rules become immediately usable, without wait 
