@@ -37,13 +37,14 @@ surprisingly, in general this is not trivial. Consider the four node example net
 
 Instead, in the following, we will present a protocol which is \emph{minimal} regarding its dependencies, in the sense that no node can improve its dependencies without some other node getting worse. As the example in Figure \ref{fig:example} shows, often there may be many nodes that can switch immediately, for different reasons. As such the dependency tree turns into a \emph{dependency forest}. As before, in this dependency forest, parents will inform their children when it is safe to use the new rule. The only difference is that the dependency forest is minimal, in the sense that one cannot remove a subtree of the forest with subtree root $c$ (and parent $p$) and re-attach it at a parent of $p$, or make $c$ a root of the forest. For simplicity, we first describe the protocol as if there was just a single destination $d$. We later discuss the case where we have multiple destinations.
 
-We need to define \emph{good} and \emph{bad} nodes as follows: good nodes are nodes that can use both old and new rules, without introducing a loop. Bad nodes on the other hand must stick to the old rule until being told so, or they will introduce a loop. Since the destination does not have any rules, neither old nor new, it is by definition good.
+Each node is in one of three states, \emph{old}, \emph{new}, or \emph{limbo}, depending on whether the node is guaranteed to only use its old rule or new rule, or whether it might use both rules, respectively. Since the destination $d$ does not have any rules, neither old nor new, it is by definition new.
 
-The algorithm constructs the dependency forest as follows: We start out with only the old rules, by definition a loop-free in-tree to destination $d$. Now, for each node $u$, we test whether adding $u$'s new rule will introduce a loop. If not, node $u$ is good, and added as a root in the dependency forest. On the other hand, if $u$'s new rule introduces a loop, node $u$ is bad, and must wait until we find its parent in the dependency forest. The initialization is completed after we found all the roots (which are now leaves in the dependency forest). Next we add the children to the dependency forest, one after another. In each step, we choose a not yet processed dependency forest leaf node $u$. We remove $u$'s old rule from the network, and then cycle through all the nodes, trying to find nodes $v$ that became good thanks to removing $u$'s old rule. If we find such a node $v$, then node $v$ is a child of $u$ in the dependency forest, and a new leaf. If no such node $v$ exists, node $u$ remains a childless leaf of the dependency forest. We continue until we processed all nodes in the network.
+The algorithm constructs the dependency forest as follows: We start out with only the old rules, by definition a loop-free in-tree to destination $d$. Now, for each node $u$, we test whether adding $u$'s new rule will introduce a loop. If not, node $u$ is entering the state limbo, and added as a root in the dependency forest. On the other hand, if $u$'s new rule introduces a loop, node $u$ remains old, and must wait until we find its parent in the dependency forest. The initialization is completed after we found all the roots (which are now leaves in the dependency forest). Next we add the children to the dependency forest, one after another. In each step, we choose a limbo dependency forest leaf node $u$. We remove $u$'s old rule from the network (putting $u$ in the new state), and then cycle through all the old nodes, trying to find nodes $v$ where the new rule of $v$ does not introduce a loop, thanks to removing $u$'s old rule. If we find such a node $v$, then node $v$ is a child of $u$ in the dependency forest, and a new leaf of the dependency forest in limbo state. If no such node $v$ exists, node $u$ remains a childless leaf of the dependency forest. It may happen that we find no more limbo node, that is, all nodes are either new or old. In this case, as proved below in Lemma 3 (TODO), we will always find an old node that can become new directly. 
+We continue until we processed all nodes in the network.
 
-At the heart of this algorithm is the simple loop-finder of Tarjan \cite{reference_1_in_http://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm} which can be implemented linearly in the size of the network. Since we must process each node, and check for each not yet processed node, the total time of the algorithm is cubic in the size of the network. We suspect that this running time can be improved, but this is outside the scope of this paper. Clearly, the order in which the nodes are visited will determine the dependency forest, however, we will guarantee that no matter what the order is, the dependency tree is minimal.
+At the heart of this algorithm is the simple loop-finder of Tarjan \cite{reference_1_in_http://en.wikipedia.org/wiki/Tarjan's_strongly_connected_components_algorithm} which can be implemented linearly in the size of the network. Since we must process each node, and check for each not yet processed node, the total time of the algorithm is cubic in the size of the network. We suspect that this running time can be improved, but this is beyond the scope of this paper. Clearly, the order in which the nodes are visited will determine the dependency forest, however, we will guarantee that no matter what the order is, the dependency tree is minimal.
 
-TODO: alternative formulation, maybe better: Initially, we let all good nodes to be roots of the dependency forest. Then, iteratively, while not all nodes are processed, we process an arbitrary good node $u$ by removing its old rule. Removing $u$'s old rule might turn other nodes good; if $v$ turns good when processing $u$, then $v$ is a child of $u$ in the dependency forest.
+TODO: alternative formulation, shorter, maybe better: Initially, we let all good nodes to be roots of the dependency forest. Then, iteratively, while not all nodes are processed, we process an arbitrary good node $u$ by removing its old rule. Removing $u$'s old rule might turn other nodes good; if $v$ turns good when processing $u$, then $v$ is a child of $u$ in the dependency forest.
 
 TODO: explain Tarjan in simple terms.
 
@@ -51,33 +52,27 @@ TODO: explain Tarjan in simple terms.
 
 In the following, we prove a few simple lemmas, which show that (i) the dependency forest is correct and (ii) minimal in the sense that if any node switches to the new rule before the parent in the dependency forest says so, a packet might be experiencing a loop.
 
+Lemma 1: The invariant of the algorithm is that the current rules in the network is without loops.
 
-Lemma 1: A good node remains good.
-
-Proof: We only add new links to the network once we verified that there are no loops (for all nodes). So once a node was considered good, it stays good.
-
+Proof: This invariant is true at the beginning, since no new rule is included, and the old rules form an in-tree to the destination $d$. This invariant remains true when a node enters the limbo state (uses both old and new rules) as we check at this stage that no loop is introduced when doing so. Finally, the statement is true as well when a node enters the new state: As this only removes an old rule, no loop can be introduced.
 
 Lemma 2: The dependency forest is loop-free. 
 
-Proof: Whenever only add good nodes to the dependency forest. Because Lemma 1, the final dependency forest is loop-free.
+Proof: As the parent of a child must be in the dependency forest already, there cannot be loops in the dependency forest.
 
-Lemma 3: Every node is in the dependency forest.
+Lemma 3: At the end, every node (but the destination $d$) is in the dependency forest.
 
-Proof: Once a node is becoming good and added to the dependency forest, it can also be processed, since processing only removes a rule, and hence cannot introduce a loop. Likewise, every node will eventually become good. TODO: ... continue...
+Proof: As long as there are nodes in limbo state, we will move them to the new state, one after the other, possibly moving other nodes from old to limbo. What if no node remains in limbo state, i.e. all nodes are either new or old. Then, as the algorithm suggests, there is always at least one node which can directly jump from old state to new state. We can find this node as follows: Start from an arbitrary old node, and move along the new rules towards the destination $d$. Since the destination is (by definition) new, along this new-rules path, there must be a last pair of nodes $c,p$, where \texttt{c.new = p}, $c$ and $p$ are old and new, respectively. Node $c$ can directly move to state new, $c$'s parent in the dependency forest is $p$. Removing $c$'s old rule will not introduce a loop, as removing a rule never introduces new loops. Also, adding $c$'s new rule does not introduce a loop, as it points to nodes which are in the new state already, that is, there are no more old rules which can cause loops. 
 
---- TODO ---
+Remark: There are networks where this jumping mechanism is necessary. Example: A network with three nodes, where \texttt{u.old = v}, \texttt{u.new = d}, \texttt{v.old = d}, and \texttt{v.new = u}. Either of the nodes $u,v$ cannot enter the limbo state, as will be a loop between $u$ and $v$. 
 
-Lemma 2: Every node is eventually good (and can be processed).
+Lemma 4: The process is correct (and produces no loops).
 
-Proof: Take any bad node. We follow the new rules towards the destination $d$ until we find a pair $u,v$ with \texttt{u.new = v}, $u$ is bad, and $v$ is good. Since the destination $d$ is good at the start of the algorithm, and we started at a bad node, such a pair must exist. TODO... here something is missing...
+Proof: The follows directly from the dependency tree, as we only added nodes once they did not introduce a loop (Lemma 1).
 
-Lemma 3: The process is correct/sufficient (and produces no loops).
+Lemma 5: The process is minimal.
 
-Proof: For the sake of contradiction, assume that there is a packet which is sent into a loop. The loop must consist of at least one new pointer, call that \texttt{u.new}, as the old pointers alone do not contain a loop. In other words, node $u$ in the loop deleted its old pointer because it was (and remained, see Lemma 1) good. On the other hand, \texttt{u.new} is on a path that points to node $u$, which is a loop. This is the definition of $u$ being bad. As node $u$ cannot be good and bad at the same time, we have a contradiction.
-
-Lemma 4: The process is optimal/necessary/minimal (no node could flip earlier).
-
-Proof: If nodes can flip immediately, they are by definition optimal, and as such the roots of the dependency forest are optimal. So let us look instead at child node $c$, which must wait for parent $p$ in the dependency tree. Node $c$ becomes good once parent $p$ removes its old pointer, before node $c$ was bad. This means that \texttt{p.old} pointed to a loop, which was removed when \texttt{p.old} was removed. In other words, by definition node $c$ could not switch to the new pointer at any earlier stage, without risking sending a packet on into a loop.
+Proof: Root nodes in the dependency forest can flip to the new rule immediately, and are as such by definition optimal. A node $c$ is a child of a parent node $p$ in the dependency tree, exactly because $c$ can only use its new rule after $p$ removed its old rule. As such, the process guaranteed that $c$ was added to the dependency tree at the earliest possible time.
 
 \subsection{Discussion} %TODO: should probably not be a subsection, just did that for navigability.
 
