@@ -1,2 +1,33 @@
 \section{Discussion}
 \label{sec:discussion}
+
+Some additional snippets:
+
+Let’s analyze it. There are only two reasons why we need network algorithms and protocols and the first place, first failures, second changes in either demand or infrastructure; if everything would be stable forever, there is no need to react (have protocols). In this work we essentially concentrate on the second (changes which can be planned). The first is also interesting, but mostly beyond the scope of this work. (This is where Ratul disagrees, and he is probably right.)
+
+Problem: Reaction time to failures and updates. A central controller is often slower than a distributed protocol, as it might be farther away, and the source of the problem/change is often close to those components that are most affected by a problem/change. Nevertheless, that’s again a failure problem. Is the only reason to use distributed protocols failure handling?
+
+(This is what this paper is about.) The answer is no. There is also synchronization. Even in the absence of failures, one cannot have nodes of a network migrate to a new version of operation at the very same instant. In theory, the last statement is trivial. In practice, clearly one tries to get as close as possible to optimal synchronization. Clearly, having an SDN helps a lot, as migration in heterogeneous networks is a whole different battle (this is another thing we discussed), as global updates of standard protocols show. However, even if the system is homogeneous, (time) synchronization is difficult [firing squad, or clock synchronization].
+
+Synchronization is an overloaded term, unfortunately. On the one hand we have something like (physical) clock synchronization, on the other hand we have (logical) synchronization. Perfect physical synchronization is impossible, so people often do logical synchronization. This is also what we do here or in SWAN.
+
+Or, to put it differently, as nodes cannot all migrate to the new version at exactly the same instance (and packets might be in transit still, and what not), we need a way to do a ``save transition'' from the old to the new state.
+
+We study dependencies that prevent a new solution from being used, e.g. a node v might need to wait for an action of some other node u before v can safely use the new solution. On a qualitative level we want to minimize the dependencies that prevent a rule from being used. However, just understanding dependencies in qualitatively has shortcomings, as nodes may depend on each other recursively. For instance, node v may only use the new solution, after node u has switched to an intermediate solution, which in turn depended on node v adopting an intermediate solution. In general, a quantitative understanding of dependencies is necessary. In SWAN, for instance, progress towards the new solution is achieved in stages, and nodes needed to wait with moving to the next stage until other nodes completed the last stage. The main goal is to minimize the time until we can use a new solution. Apart from time, there is also a space component, as we want to remove old rules as soon as possible (as soon as not used anymore).
+
+In this paper we discuss what the ``safe'' in safe transition is.
+
+We also discuss whether there is a tradeoff speed and safety.
+
+We exemplarily look into this tradeoff in one specific example (by looking at different ways to do such a transition).
+Some new ideas from discussions:
+
+What helper tools do you have? ``Just control network'' (including gateway routers, but not servers). If needed, one can add header, or mess with TTL. Also: Only talk to neighbors, or able to route messages?
+
+Other consistencies: FIFO, no drop, ``eventual'', suffix.
+
+Worst-case view: If there is a network/traffic pattern with a problem, then the consistency has a problem.
+
+You do not control old and new, so old=new is not a consistency criterion.
+
+
