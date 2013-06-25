@@ -13,7 +13,9 @@ Synchronization is an overloaded term, unfortunately. On the one hand we have so
 
 Or, to put it differently, as nodes cannot all migrate to the new version at exactly the same instance (and packets might be in transit still, and what not), we need a way to do a ``save transition'' from the old to the new state.
 
-We study dependencies that prevent a new solution from being used, e.g. a node v might need to wait for an action of some other node u before v can safely use the new solution. On a qualitative level we want to minimize the dependencies that prevent a rule from being used. However, just understanding dependencies in qualitatively has shortcomings, as nodes may depend on each other recursively. For instance, node v may only use the new solution, after node u has switched to an intermediate solution, which in turn depended on node v adopting an intermediate solution. In general, a quantitative understanding of dependencies is necessary. In SWAN, for instance, progress towards the new solution is achieved in stages, and nodes needed to wait with moving to the next stage until other nodes completed the last stage. The main goal is to minimize the time until we can use a new solution. Apart from time, there is also a space component, as we want to remove old rules as soon as possible (as soon as not used anymore).
+[Roger removed this missing snippet and used it in 4]
+
+Apart from time, there is also a space component, as we want to remove old rules as soon as possible (as soon as not used anymore).
 
 In this paper we discuss what the ``safe'' in safe transition is.
 
