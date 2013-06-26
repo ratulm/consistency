@@ -1,8 +1,10 @@
 \begin{table*}[t!]
 \begin{center}
-\begin{tabular}{p{1in}|p{1in}|p{1in}|p{1in}|p{1in}|}
+\begin{tabular}{p{1in}|p{1in}|p{1in}|p{1in}|p{1in}|p{1in}|}
 &
   \textbf{None}
+&
+  \textbf{Self}  
 &
   \textbf{Downstream subset}
 &
@@ -11,7 +13,17 @@
   \textbf{All}
 \ \\ \hline
 
+  \textbf{Eventual consistency}
+&
+  Always guaranteed
+&
+&
+&
+&
+\ \\ \hline
+
   \textbf{Drop freedom}
+&
 &
   \textbf{Add before remove}
 &
@@ -20,6 +32,7 @@
 \ \\ \hline
 
   \textbf{Loop freedom}
+&
 &
   Impossible (first paragraph in \S\ref{sec:example}) TODO: reformulate the last sentence of the paragraph as a lemma?
 &
@@ -31,7 +44,8 @@
 
   \textbf{Packet coherence}
 &
- 
+&
+
 &
   Impossible (Lemma Y)
 &
@@ -42,9 +56,10 @@
 
   \textbf{Bandwidth coherence}
 &
- 
 &
-  
+
+&
+
 &
   Impossible (Lemma Z)
 &
@@ -81,7 +96,7 @@ We define the consistency properties listed in Table~\ref{tbl:big} as follows.
 
 \end{itemize}
 
-The consistency properties are listed in rough order of strength, that is, satisfying a property lower on the list satisfies properties above it. For instance, guaranteeing packet coherence automatically guarantees drop freedom and loop freedom, assuming that neither the set of old rules nor the set of new rules lead to packet drops or loops. Similarly, bandwidth coherence guarantees drop freedom (by definition). It also guarantees loop freedom because sending even a small flow in a loop will quickly overload the capacity constraints on the links of the loop.  However, we are not able to totally order these properties. Packet coherence and bandwidth coherence, on the other hand, are orthogonal, as packet coherence does not address capacity, and there might be solutions to capacity that work even without tunnels. Also drop freedom and loop freedom are orthogonal, as each is a solution to the other, i.e. always dropping packets before they enter a loop guarantees loop freedom, and just sending packets back to sender guarantees drop freedom (at the cost of introducing loops). As such we established all relations between the four consistency properties we list in the table. 
+The consistency properties are listed in rough order of strength, that is, satisfying a property lower on the list satisfies properties above it. For instance, guaranteeing packet coherence automatically guarantees drop freedom and loop freedom, assuming that neither the set of old rules nor the set of new rules lead to packet drops or loops. Similarly, bandwidth coherence guarantees drop freedom (by definition). It also guarantees loop freedom because sending even a small flow in a loop will quickly overload the capacity constraints on the links of the loop.  However, we are not able to totally order these properties. Packet coherence and bandwidth coherence, on the other hand, are orthogonal, as packet coherence does not address capacity, and there might be solutions to capacity that work even without tunnels. Also drop freedom and loop freedom are orthogonal, as each is a solution to the other, i.e. always dropping packets before they enter a loop guarantees loop freedom, and just sending packets back to sender guarantees drop freedom (at the cost of introducing loops). As such we established all relations between the four consistency properties we list in the table.
 
 The consistency properties in the table are not the only ones of interest. In some applications, one may be happy with eventual consistency, the weakest consistency property possible that just guarantees that eventually, all switches will be following the new rules, and then the network is by definition consistent again. Other applications may require different consistency guarantees (e.g., flow coherence: the set of rules seen by a flow should not be a mix of old and new rules) or a consistency guarantee that is a mix of those listed (e.g., packet coherence + bandwidth coherence). We chose these consistency properties because they are basic, ``natural'' properties.
 
@@ -121,5 +136,5 @@ Proof: Let $f$ be a flow that wants to use a new path $p$, or increase its capac
 
 Then again, achieving some other consistency properties are less demanding. Eventual consistency is always for free, as it gives no guarantee during transition. And drop freedom is only dependent on the switch itself, i.e. that we add the new rule in the switch before the old rule is removed. When installed as having higher priority, the new rules become immediately usable, without wait.
 
-[TODO: Ratul, not sure whether you would like this or not: One could consider adding another column/row in the table, called ``Switch'', between none and Downstream subset. This would be exactly for Drop Freedom. Then we could also add ``Eventual consistency'', which truly depends on nothing. Currently, it is just described in the text, and since it is not very deep, it might not help our paper very much. Nevertheless, one might consider renaming ``None'' to ``Switch'' as column name]
+[TODO: Not sure whether adding the column/row actually makes sense, after I did that.]
 
