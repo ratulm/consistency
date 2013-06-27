@@ -7,6 +7,18 @@
 
 \paragraph{Dependency graphs}
 
+In general, software defined networks should not be modeled by mere rules or rule changes, but rather by \emph{rule dependencies}. As we showed in this paper, rules often depend on each other, before a new rule can be used, one must make sure that other rules are already in place, or that other rules are being removed. These rule dependencies in general form a directed graph we call the dependency graph, as follows:
+
+TODO: Not clear how to describe the graph. Do nodes do something, or are they just there? It is clear that edges will carry the dependencies (rule exists, or rule is removed). Edges could also carry actions (insert rule, delete rule), but that could possibly also be done by nodes. What is better? What if we have logical functions in the graph, e.g. a logical or? This can also be represented. What about usage? It is clear that usage depends on certain rules to be present. However, also the opposite is true, e.g. dropping a rule may depend on the rule no longer being used.
+
+There are two basic problems with dependency graphs. First, they may contain cycles, e.g. the triangle example for loop-free routing with multiple destinations. These cycles must be broken, and there are several ways to do this: One my for instance add helper nodes into the graph that for instance break conflicting rules into subrules. TODO: one may go through the triangle example to explain this. Another technique to break cycles is to introduce version numbers. Version numbers in particular help if a rule needs to wait for another rule to be removed first. Just introduce a version number, and then it is clear which of the conflicting rules should be used. 
+
+There is also a helping scheme in order not to wait for another rule to be in place already: Also here we include additional information in the packet, namely the information what the node that did not install the necessary rule yet should do with the packet when it receives it (and does not know what to do with it). 
+
+Version numbers also help flattening the dependency graph. With version numbers, one may be able to break long dependency chains, and the ``add all new rules first, using a new version number, and once that is done, use them'' paradigm shortens dependencies in a simple way.
+
+
+
 
 Some additional snippets:
 
