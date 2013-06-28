@@ -1,4 +1,4 @@
-\section{Appendix for \S\ref{sec:loop-free}} 
+\section{Appendix for \S\ref{sec:minimal}}
 
 In the following, we prove a few simple lemmas, which show that (i) the dependency forest is correct and (ii) minimal in the sense that if any node switches to the new rule before the parent in the dependency forest says so, a packet might be experiencing a loop.
 
@@ -27,11 +27,16 @@ Proof: Root nodes in the dependency forest can flip to the new rule immediately,
 \section{Appendix for \S\ref{sec:table}}
 \label{sec:app2}
 
+
+Lemma X: Loop freedom depends on other nodes.
+
+Proof: In the example in Figure \ref{fig:example}, node $x$ depends on node $y$.
+
 Lemma Y: Packet coherence depends on all non-trivial downstream switches.
 
 Proof: Let $u$ be a switch router that is non-trivial, in the sense that $u$ is affected by a rule change, i.e. $u$'s old rule differs from its new rule. If the source starts to route packet according to the new rule, the switch $u$ will forward the packets wrongly, or drop them, which is not packet coherent.
 
-Lemma Z: Bandwidth coherence potentially depends on all switches.
+Lemma Z: Bandwidth limit potentially depends on all switches.
 
-Proof: Let $f$ be a flow that wants to use a new path $p$, or increase its capacity on an existing path. The network may be able to adapt to flow $f$, however, in general only if other flows use different paths as well, which in turn may move even other flows (some of which have no single switch/link in common with the new path $p$), etc. As such, any $f$ may potentially depend on any single switch in the network, even though in some networks and applications, one may be able to implement bandwidth coherence with less dependencies.
+Proof: Let $f$ be a flow that wants to use a new path $p$, or increase its capacity on an existing path. The network may be able to adapt to flow $f$, however, in general only if other flows use different paths as well, which in turn may move even other flows (some of which have no single switch/link in common with the new path $p$), etc. As such, any $f$ may potentially depend on any single switch in the network, even though in some networks and applications, one may be able to implement bandwidth limit with less dependencies.
 

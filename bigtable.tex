@@ -44,7 +44,7 @@
 
   \textbf{Loop freedom}
 &
-  \multicolumn{2}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma X?)}
+  \multicolumn{2}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma X)}
 &
   Rule dep. forest (\S\ref{sec:minimal})
 &
@@ -63,7 +63,7 @@
 
   \textbf{Bandwidth limit}
 &
-  \multicolumn{4}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma Z)} 
+  \multicolumn{4}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma Z)}
 &
   Staged partial moves~\cite{swan}
 \ \\ \hline
@@ -78,7 +78,7 @@
 
 Thus far, we have focused on one consistency property, to expose the various subtleties in maintaining consistency during updates. We now take a broader view of the range of consistency properties. Table~\ref{tbl:big} helps frame this discussion. Its rows correspond to consistency properties. We defined loop freedom and packet coherence in \S\ref{sec:loop-free}; the others are:
 
-\paragraphb{Eventual} This essentially means that no consistency is provided during updates. If the new set of rules computed by the controller are consistent (by any definition), the network will be eventually consistent.
+\paragraphb{Eventual} No consistency is provided during updates. If the new set of rules computed by the controller are consistent (by any definition), the network will be eventually consistent.
 
 \paragraphb{Drop freedom} No packet should be dropped during updates. Drops may occur if a switch does not have a rule to handle a packet, and it is not configured to send unmatched packets to the controller (as is done in large-scale networks~\cite{swan,b4}).
 
@@ -89,29 +89,32 @@ Thus far, we have focused on one consistency property, to expose the various sub
 
 \paragraphb{Memory limit} The number of rules that a switch is required to hold is always below a certain limit. A natural limit is the physical capacity of the flow table, but other limits may also be enforced.
 
-\paragraphb{Bandwidth limit} The amount of traffic arriving at a link should not be exceed a certain limit. As above, physical link capacity is a natural limit, but other limits may be interesting as well (e.g., margin for burstiness). Implicit in this definition is that the limit be maintained without dropping traffic; otherwise, we can meet any limit by dropping all traffic.
+\paragraphb{Bandwidth limit} The amount of traffic arriving at a link should not exceed a certain limit. As above, physical link capacity is a natural limit, but other limits may be interesting as well (e.g., margin for burstiness). Implicit in this definition is that the limit be maintained without dropping traffic; otherwise, we can meet any limit by dropping all traffic.
 
-The consistency properties we list are not the only ones of interest. 
-%In some applications, one may be happy with eventual consistency, the weakest consistency property possible that just guarantees that eventually, all switches will be following the new rules, and then the network is by definition consistent again. 
-Some networks may require different properties (e.g., balanced load across two links), and some others may require  guarantees that combine two or more properties (e.g., packet coherence + bandwidth limits). We chose these consistency properties because they are basic and natural in that they capture the basic experience of packets and network elements.
+The consistency properties we list are not the only ones of interest.
+%In some applications, one may be happy with eventual consistency, the weakest consistency property possible that just guarantees that eventually, all switches will be following the new rules, and then the network is by definition consistent again.
+Some networks may require different properties (e.g., balanced load across two links), and some others may require  guarantees that combine two or more properties (e.g., packet coherence + bandwidth limits). We chose these consistency properties because they are basic and natural, as they capture the experience of packets and network elements.
 
-The consistency properties are listed in rough order of strength, and satisfying a property lower on the list may satisfy a property above it. Obviously, packet coherence implies drop and loop freedom (assuming that the old and new rules sets are free of drops and loops). Perhaps less obviously, bandwidth limits imply loop freedom because sending even a small flow in a loop can quickly surpass any bandwidth limit for links on the loop.  
+The consistency properties are listed in rough order of strength, and satisfying a property lower on the list may satisfy a property above it. Obviously, packet coherence implies drop and loop freedom (assuming that the old and new rules sets are free of drops and loops). Perhaps less obviously, bandwidth limits imply loop freedom because sending even a small flow in a loop will quickly surpass any bandwidth limit for links on the loop.
 
-However, these properties cannot be totally ordered. Packet coherence and bandwidth limits are orthogonal, as packet coherence does not address bandwidth.
-%, and there might be solutions to capacity that work even without tunnels. 
-Drop freedom and loop freedom are also orthogonal. In fact, trivial solutions for one violates the other---dropping packets before they enter a loop guarantees loop freedom, and just sending packets back to the sender provides drop freedom at the risk of introducing loops.
+However, these properties cannot be totally ordered. Packet coherence and bandwidth limits are orthogonal, as packet coherence does not address bandwidth, and bandwidth limits can be achieved with solutions beyond packet coherence.
+%Roger: not much better than before, I know.
+Drop freedom and loop freedom are also orthogonal. In fact, trivial solutions for one violates the other---dropping packets before they enter a loop guarantees loop freedom, and just sending packets back to the sender provides drop freedom but creates loops.
 
 %As such we established all relations between the four consistency properties we list in the table.
 
-The columns in Table~\ref{tbl:big} correspond to dependency structures. They denote which other switches must be updated before a new rule at a switch can be used (while maintaining consistency). Thus, the dependency is at the rule level, not switch level. (At the switch level, dependencies are often circular; switch $u$ depends on $v$ for some rules and $v$ depends on $u$ for other rules.) Further, it captures when a rule can be installed and used, not when old rules can be removed. Even after all new rules are installed and the network is carrying traffic accordingly, the set of rules in the network may not be identical to the desired new rule set. Additional (unused, low-priority) rules may still exist in the network. Such rules will be removed in a clean-up phase.
-%With the exception of drop freedom, 
-Our dependency definition does not consider this phase but focuses on what it takes to get the network carrying traffic as per the new rules.
+The columns in Table~\ref{tbl:big} correspond to dependency structures. They denote which other switches must be updated before a new rule at a switch can be used (while maintaining consistency). Thus, the dependency is at the rule level, not switch level. (At the switch level, dependencies are often circular; a rule on switch $u$ depends on a rule on switch $v$, which in turn again depends on $u$ for other rules.)
+%Roger: oops, I did it again.
+Further, it captures when a rule can be installed and used, not when old rules can be removed. Even after all new rules are installed and the network is carrying traffic accordingly, the set of rules in the network may not be identical to the desired new rule set. Additional (unused, low-priority) rules may still exist in the network. Such rules will be removed in a clean-up phase;
+%With the exception of drop freedom,
+%Our dependency definition does not consider this phase but focuses on what it takes to get the network carrying traffic as per the new rules.
+we will discuss this in Section \ref{sec:discussion}.
 
-The different structures in Table~\ref{tbl:big} are: 
+The different structures in Table~\ref{tbl:big} are:
 
 \paragraphb{None} The rule does not depend on any other update.
 
-\paragraphb{Self} The rule depends on updates at the same switch. 
+\paragraphb{Self} The rule depends on updates at the same switch.
 
 \paragraphb{Downstream subset} The update depends on updates at a subset of switches that lie downstream with respect to impacted packets.
 
@@ -125,13 +128,16 @@ While these dependency structures are qualitative, not quantitative (e.g., time 
 
 %\ratul{I don't get this: In other words, the dependency categories are on a qualitative level only, and do not give the same insights as a more quantitative understanding on the level of rules. In SWAN \cite{swan}, for instance, progress towards the new solution is achieved in stages, and nodes need to wait with moving to the next stage until other nodes completed the last stage. The goal is to minimize the time until we can use a new solution.}
 
-The cells in the table denote whether an algorithm exists to update the network while satisfying the corresponding consistency property and inducing the corresponding dependency structure. We see that certain combinations are impossible, that is, no such algorithm can exist.\footnote{Example impossibility proofs are in Appendix \ref{sec:app2}.} So, for example, packet coherence cannot be achieved in a way that rules depend on updates at only a subset of downstream switches.
+The cells in the table denote whether an algorithm exists to update the network while satisfying the corresponding consistency property and inducing the corresponding dependency structure. We see that certain combinations are impossible, that is, no such algorithm can exist.\footnote{These impossibility proofs are in Appendix \ref{sec:app2}.} So, for example, packet coherence cannot be achieved in a way that rules depend on updates at only a subset of downstream switches.
 
-Expectedly, weaker consistency properties (towards the top) require weaker dependency structures (towards the left). At one extreme, eventual consistency, which implies no consistency during updates, requires no dependencies at all.  Slightly stronger properties, drop freedom and memory limit, can be achieved by depending on the switch itself. A simple algorithm for drop freedom is to add the new rule in the switch before the old rule is removed. When installed with higher priority, the new rules become immediately usable, without wait.\ratul{should drop freedom be none? there is no dependency on other rules, in terms of when a new rule can be added and used} 
+Expectedly, weaker consistency properties (towards the top) require weaker dependency structures (towards the left). At one extreme, eventual consistency, which implies no consistency during updates, requires no dependencies at all.  Slightly stronger properties, drop freedom and memory limit, can be achieved by depending on the switch itself. A simple algorithm for drop freedom is to add the new rule in the switch before the old rule is removed. When installed with higher priority, the new rules become immediately usable, without wait.
+%\ratul{should drop freedom be none? there is no dependency on other rules, in terms of when a new rule can be added and used} %not sure that we need anything here, maybe something else that goes into 5?
 A simplistic method for adhering to memory limits, if that were the only concern, is to remove some rules at the same switch before adding any new rule. This process might compromise other consistency properties (e.g., drop or loop freedom), but it will maintain memory limits.
 
 At the other extreme, bandwidth limit requires global coordination. The intuition here is that maintaining bandwidth limits at a link requires coordinating all flows that use it, and some of these flows share links with other flows, and so on. Hong et al.~\cite{swan} describe a procedure to effect such transitions by moving flows partially across multiple stages.
 
-Interestingly, all cells to the immediate right of impossible cells are occupied, which implies that, across past work and this paper,  (qualitatively) optimal algorithms for maintain all these consistency properties are known. However, one must not infer from this observation that finding consistent update procedures is a "solved problem" at this point.  As we mentioned previously, some networks may need different properties and algorithms will need to be developed for those properties. 
+Interestingly, all cells to the immediate right of impossible cells are occupied, which implies that, across past work and this paper,  (qualitatively) optimal algorithms for maintain all these consistency properties are known. However, one must not infer from this observation that finding consistent update procedures is a ``solved problem'' at this point.  As we mentioned previously, some networks may need different properties and algorithms will need to be developed for those properties.
 
-Even amongst this set of properties, the rosy picture that emerges is partly due to the rows focusing on consistency properties in isolation. The combinations are hard to  ensure, and efficient algorithms are not known. For instance, drop freedom and memory limit, while easy to ensure individually, are challenging to ensure in combination. Though we do not have a formal proof, we expect that maintaining the combination requires global dependencies. We believe that what is presented in this and prior work is just the tip of iceberg when it comes to consistent updates in SDNs. 
+Even amongst this set of properties, the rosy picture that emerges is partly due to the rows focusing on consistency properties in isolation. The combinations are hard to  ensure, and efficient algorithms are not known. For instance, drop freedom and memory limit, while easy to ensure individually, are challenging to ensure in combination. Maintaining the combination requires global dependencies, as introducing some rule at a switch might need to remove another rule first, which can only be removed after having added a new rule somewhere else. 
+
+Last not least, the table only shows the qualitative part of the story, ignoring the more interesting quantitative effects. Even though \cite{safeupdate} and \cite{swan} both have global dependencies, \cite{safeupdate} can always resolve the dependencies in only two rounds, whereas \cite{swan} may provably need more stages in certain instances. We believe that what is presented in this and prior work is just the tip of iceberg when it comes to consistent updates in SDNs.
