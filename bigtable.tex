@@ -1,19 +1,19 @@
 \begin{table*}[t!]
 \begin{center}
-\begin{tabular}{p{1in}|p{1in}|p{1in}|p{1in}|p{1in}|p{1in}|}
+\begin{tabular}{>{\centering\arraybackslash}p{0.7in}|>{\centering\arraybackslash}m{0.75in}|>{\centering\arraybackslash}p{0.8in}|>{\centering\arraybackslash}p{0.85in}|>{\centering\arraybackslash}p{0.85in}|>{\centering\arraybackslash}p{0.75in}|}
 &
   \textbf{None}
 &
-  \textbf{Self}  
+  \textbf{Self}
 &
   \textbf{Downstream subset}
 &
   \textbf{Downstream all}
 &
-  \textbf{All}
+  \textbf{Global}
 \ \\ \hline
 
-  \textbf{Eventual consistency}
+  \textbf{Eventual}
 &
   Always guaranteed
 &
@@ -24,8 +24,19 @@
 
   \textbf{Drop freedom}
 &
+  \multicolumn{1}{>{\columncolor[gray]{0.8}}c|}{Impossible}
 &
-  \textbf{Add before remove}
+  Add before remove
+&
+&
+&
+\ \\ \hline
+
+  \textbf{Memory limit}
+&
+  \multicolumn{1}{>{\columncolor[gray]{0.8}}c|}{Impossible}
+&
+  Remove before add
 &
 &
 &
@@ -33,108 +44,94 @@
 
   \textbf{Loop freedom}
 &
+  \multicolumn{2}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma X?)}
 &
-  Impossible (first paragraph in \S\ref{sec:example}) TODO: reformulate the last sentence of the paragraph as a lemma?
+  Rule dep. forest (\S\ref{sec:minimal})
 &
-  \textbf{\S\ref{sec:minimal} (dependency forest)}
-&
-  \S\ref{sec:example} (dependency tree)
+  Rule dep. tree (\S\ref{sec:practical})
 &
 \ \\ \hline
 
   \textbf{Packet coherence}
 &
+  \multicolumn{3}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma Y)}
 &
-
+  Per-flow ver. numbers
 &
-  Impossible (Lemma Y)
-&
-  \textbf{Reitblatt et al.~\cite{safeupdate} (version numbers)}
-&
-  That first version of Reitblatt et al. \cite{dontknow}
+  Global ver. numbers~\cite{safeupdate}
 \ \\ \hline
 
-  \textbf{Bandwidth coherence}
+  \textbf{Bandwidth limit}
 &
+  \multicolumn{4}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma Z)} 
 &
-
-&
-
-&
-  Impossible (Lemma Z)
-&
-  \textbf{SWAN~\cite{swan} (helper rules, stages)}
+  Staged partial moves~\cite{swan}
 \ \\ \hline
 \end{tabular}
 \end{center}
-\caption{something}
+\caption{Some basic consistency properties and their dependencies.}
 \label{tbl:big}
 \end{table*}
 
 \section{Consistency space}
 \label{sec:table}
 
-The previous section focuses on one consistency property, namely loop freedom, to expose the algorithmic subtleties in maintaining consistency properties during updates. This section takes a broader view of the space of consistency properties, and it outlines the dependency structure among switches that is needed for satisfying them.
+Thus far, we have focused on one consistency property, to expose the various subtleties in maintaining consistency during updates. We now take a broader view of the range of consistency properties. Table~\ref{tbl:big} helps frame this discussion. Its rows correspond to consistency properties. We defined loop freedom and packet coherence in \S\ref{sec:loop-free}; the others are:
 
-Table~\ref{tbl:big} helps frame this discussion. The rows correspond to consistency properties, and the columns correspond to dependency properties that denote when a new rule can be installed. The cells denote (i) whether an algorithm exists to update the network while satisfying the corresponding consistency property and relying on the corresponding dependency structure, or (ii) whether there is an impossibility result.
+\paragraphb{Eventual} This essentially means that no consistency is provided during updates. If the new set of rules computed by the controller are consistent (by any definition), the network will be eventually consistent.
 
-We define the consistency properties listed in Table~\ref{tbl:big} as follows.
+\paragraphb{Drop freedom} No packet should be dropped during updates. Drops may occur if a switch does not have a rule to handle a packet, and it is not configured to send unmatched packets to the controller (as is done in large-scale networks~\cite{swan,b4}).
 
-\begin{itemize}
+%\item
+%\textbf{Loop freedom} There should be no loops during updates, where we define a loop as a packet (without any transformation) visiting an (TODO: ``the same'' instead of ``an''?) interface multiple times.
 
-\item
-\textbf{Drop freedom} No packet should be dropped during updates. Drops can occur if a switch does not have a rule to handle a packet, and is not configured to send packets that do not match any rule to the controller (as is the case for large-scale networks such as wide area backbones and data centers).
+%\paragraphb{Packet coherence} The set of rules seen by a packet should not be a mix of old and new rules; they should be either all old or all new rules.
 
-\item
-\textbf{Loop freedom} There should be no loops during updates, where we define a loop as a packet (without any transformation) visiting an (TODO: ``the same'' instead of ``an''?) interface multiple times.
+\paragraphb{Memory limit} The number of rules that a switch is required to hold is always below a certain limit. A natural limit is the physical capacity of the flow table, but other limits may also be enforced.
 
-\item
-\textbf{Packet coherence} The set of rules seen by a packet should not be a mix of old and new rules; they should be either all old or all new rules.
+\paragraphb{Bandwidth limit} The amount of traffic arriving at a link should not be exceed a certain limit. As above, physical link capacity is a natural limit, but other limits may be interesting as well (e.g., margin for burstiness). Implicit in this definition is that the limit be maintained without dropping traffic; otherwise, we can meet any limit by dropping all traffic.
 
-\item
-\textbf{Bandwidth coherence} The amount of traffic arriving at a link should not be larger than its capacity. Drop freedom is implicit in this definition; otherwise, a trivial way to meet link capacity constraints is by dropping packets.
+The consistency properties we list are not the only ones of interest. 
+%In some applications, one may be happy with eventual consistency, the weakest consistency property possible that just guarantees that eventually, all switches will be following the new rules, and then the network is by definition consistent again. 
+Some networks may require different properties (e.g., balanced load across two links), and some others may require  guarantees that combine two or more properties (e.g., packet coherence + bandwidth limits). We chose these consistency properties because they are basic and natural in that they capture the basic experience of packets and network elements.
 
-\end{itemize}
+The consistency properties are listed in rough order of strength, and satisfying a property lower on the list may satisfy a property above it. Obviously, packet coherence implies drop and loop freedom (assuming that the old and new rules sets are free of drops and loops). Perhaps less obviously, bandwidth limits imply loop freedom because sending even a small flow in a loop can quickly surpass any bandwidth limit for links on the loop.  
 
-The consistency properties are listed in rough order of strength, that is, satisfying a property lower on the list satisfies properties above it. For instance, guaranteeing packet coherence automatically guarantees drop freedom and loop freedom, assuming that neither the set of old rules nor the set of new rules lead to packet drops or loops. Similarly, bandwidth coherence guarantees drop freedom (by definition). It also guarantees loop freedom because sending even a small flow in a loop will quickly overload the capacity constraints on the links of the loop.  However, we are not able to totally order these properties. Packet coherence and bandwidth coherence, on the other hand, are orthogonal, as packet coherence does not address capacity, and there might be solutions to capacity that work even without tunnels. Also drop freedom and loop freedom are orthogonal, as each is a solution to the other, i.e. always dropping packets before they enter a loop guarantees loop freedom, and just sending packets back to sender guarantees drop freedom (at the cost of introducing loops). As such we established all relations between the four consistency properties we list in the table.
+However, these properties cannot be totally ordered. Packet coherence and bandwidth limits are orthogonal, as packet coherence does not address bandwidth.
+%, and there might be solutions to capacity that work even without tunnels. 
+Drop freedom and loop freedom are also orthogonal. In fact, trivial solutions for one violates the other---dropping packets before they enter a loop guarantees loop freedom, and just sending packets back to the sender provides drop freedom at the risk of introducing loops.
 
-The consistency properties in the table are not the only ones of interest. In some applications, one may be happy with eventual consistency, the weakest consistency property possible that just guarantees that eventually, all switches will be following the new rules, and then the network is by definition consistent again. Other applications may require different consistency guarantees (e.g., flow coherence: the set of rules seen by a flow should not be a mix of old and new rules) or a consistency guarantee that is a mix of those listed (e.g., packet coherence + bandwidth coherence). We chose these consistency properties because they are basic, ``natural'' properties.
+%As such we established all relations between the four consistency properties we list in the table.
 
-We define the dependency structures listed in Table~\ref{tbl:big} as follows.
+The columns in Table~\ref{tbl:big} correspond to dependency structures. They denote which other switches must be updated before a new rule at a switch can be used (while maintaining consistency). Thus, the dependency is at the rule level, not switch level. (At the switch level, dependencies are often circular; switch $u$ depends on $v$ for some rules and $v$ depends on $u$ for other rules.) Further, it captures when a rule can be installed and used, not when old rules can be removed. Even after all new rules are installed and the network is carrying traffic accordingly, the set of rules in the network may not be identical to the desired new rule set. Additional (unused, low-priority) rules may still exist in the network. Such rules will be removed in a clean-up phase.
+%With the exception of drop freedom, 
+Our dependency definition does not consider this phase but focuses on what it takes to get the network carrying traffic as per the new rules.
 
-\begin{itemize}
+The different structures in Table~\ref{tbl:big} are: 
 
-\item
-\textbf{None} Installing and using a new rule at a switch does not need to wait for updates to be completed at any other switch.
+\paragraphb{None} The rule does not depend on any other update.
 
-\item
-\textbf{Downstream subset} Installing and using a new rule at a switch needs to wait for certain rules to be installed at a subset of switches that lie on the downstream for the packets that use the rule.
+\paragraphb{Self} The rule depends on updates at the same switch. 
 
-\item
-\textbf{Downstream all} Installing and using a new rule at a switch needs to wait for certain rules to be completed at all switches that lie downstream for the packets that use the rule.
+\paragraphb{Downstream subset} The update depends on updates at a subset of switches that lie downstream with respect to impacted packets.
 
-\item
-\textbf{All} Installing and using a new rule at a switch needs to wait for updates even at switches that are not on the paths for packets that use the rule.
+\paragraphb{Downstream all} The update depends on updates at all switches that lie downstream with respect to impacted packets.
 
-\end{itemize}
+\paragraphb{Global} The rule depends on updates even at potentially all switches, including those that are not on the path for packets that use the rule.
 
-Some characteristics of these dependency properties are worth mentioning. First, note that the dependencies are totally ordered, i.e., no dependency is the weakest, and all is the strongest.
+%Some characteristics of these dependency properties are worth mentioning. First, note that the dependencies are totally ordered, i.e., no dependency is the weakest, and all is the strongest.
 
-Second, the dependencies capture when rules can be installed and used, not when the network as a whole has fully transitioned to the new rules. In particular, even after all the new rules are installed and the network is carrying traffic as per the new rules, the set of rules in the network may not be identical to the desired set of new rules. Some additional (unused, low-priority) rules may still be present in the network. Such rules will be removed in a clean-up phase. With the exception of the drop freedom consistency, our dependency definition does not consider this clean-up phase but focuses on what it takes to get the network carrying traffic as per the new rules.
+While these dependency structures are qualitative, not quantitative (e.g., time or length of dependency chains), in general, update procedures with fewer dependencies (i.e., to the left) are preferable.
 
-Third, the dependencies are with respect to rules, not switches. For instance, switch $v$ may only use the new rule, after switch $u$ has switched to an intermediate rule, which in turn depended on switch $v$ adopting an intermediate solution. As such, a the level of switches, dependencies may be circular. In other words, the dependency categories are on a qualitative level only, and do not give the same insights as a more quantitative understanding on the level of rules. In SWAN \cite{swan}, for instance, progress towards the new solution is achieved in stages, and nodes need to wait with moving to the next stage until other nodes completed the last stage. The goal is to minimize the time until we can use a new solution.
+%\ratul{I don't get this: In other words, the dependency categories are on a qualitative level only, and do not give the same insights as a more quantitative understanding on the level of rules. In SWAN \cite{swan}, for instance, progress towards the new solution is achieved in stages, and nodes need to wait with moving to the next stage until other nodes completed the last stage. The goal is to minimize the time until we can use a new solution.}
 
-Finally, after explaining the axes of the table, let us focus on the cells. As networking researchers, our goal is to find algorithms that satisfy a given consistency property with as few dependencies as possible, that is, as much to the left as possible. However, in some cases, the next left column is provable impossible. In particular:
+The cells in the table denote whether an algorithm exists to update the network while satisfying the corresponding consistency property and inducing the corresponding dependency structure. We see that certain combinations are impossible, that is, no such algorithm can exist.\footnote{Example impossibility proofs are in Appendix \ref{sec:app2}.} So, for example, packet coherence cannot be achieved in a way that rules depend on updates at only a subset of downstream switches.
 
-Lemma Y: Packet coherence depends on all non-trivial downstream switches.
+Expectedly, weaker consistency properties (towards the top) require weaker dependency structures (towards the left). At one extreme, eventual consistency, which implies no consistency during updates, requires no dependencies at all.  Slightly stronger properties, drop freedom and memory limit, can be achieved by depending on the switch itself. A simple algorithm for drop freedom is to add the new rule in the switch before the old rule is removed. When installed with higher priority, the new rules become immediately usable, without wait.\ratul{should drop freedom be none? there is no dependency on other rules, in terms of when a new rule can be added and used} 
+A simplistic method for adhering to memory limits, if that were the only concern, is to remove some rules at the same switch before adding any new rule. This process might compromise other consistency properties (e.g., drop or loop freedom), but it will maintain memory limits.
 
-Proof: Let $u$ be a switch router that is non-trivial, in the sense that $u$ is affected by a rule change, i.e. $u$'s old rule differs from its new rule. If the source starts to route packet according to the new rule, the switch $u$ will forward the packets wrongly, or drop them, which is not packet coherent.
+At the other extreme, bandwidth limit requires global coordination. The intuition here is that maintaining bandwidth limits at a link requires coordinating all flows that use it, and some of these flows share links with other flows, and so on. Hong et al.~\cite{swan} describe a procedure to effect such transitions by moving flows partially across multiple stages.
 
-Lemma Z: Bandwidth coherence potentially depends on all switches.
+Interestingly, all cells to the immediate right of impossible cells are occupied, which implies that, across past work and this paper,  (qualitatively) optimal algorithms for maintain all these consistency properties are known. However, one must not infer from this observation that finding consistent update procedures is a "solved problem" at this point.  As we mentioned previously, some networks may need different properties and algorithms will need to be developed for those properties. 
 
-Proof: Let $f$ be a flow that wants to use a new path $p$, or increase its capacity on an existing path. The network may be able to adapt to flow $f$, however, in general only if other flows use different paths as well, which in turn may move even other flows (some of which have no single switch/link in common with the new path $p$), etc. As such, any $f$ may potentially depend on any single switch in the network, even though in some networks and applications, one may be able to implement bandwidth coherence with less dependencies.
-
-Then again, achieving some other consistency properties are less demanding. Eventual consistency is always for free, as it gives no guarantee during transition. And drop freedom is only dependent on the switch itself, i.e. that we add the new rule in the switch before the old rule is removed. When installed as having higher priority, the new rules become immediately usable, without wait.
-
-[TODO: Not sure whether adding the column/row actually makes sense, after I did that.]
-
+Even amongst this set of properties, the rosy picture that emerges is partly due to the rows focusing on consistency properties in isolation. The combinations are hard to  ensure, and efficient algorithms are not known. For instance, drop freedom and memory limit, while easy to ensure individually, are challenging to ensure in combination. Though we do not have a formal proof, we expect that maintaining the combination requires global dependencies. We believe that what is presented in this and prior work is just the tip of iceberg when it comes to consistent updates in SDNs. 
