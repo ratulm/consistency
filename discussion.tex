@@ -3,7 +3,6 @@
 
 \subsection{A general abstraction of network updates}
 
-<<<<<<< HEAD
 \paragraph{Dependency primitive in switches}
 
 \paragraph{Dependency graphs}
@@ -12,9 +11,9 @@ In general, software defined networks should not be modeled by mere rules or rul
 
 TODO: Not clear how to describe the graph. Do nodes do something, or are they just there? It is clear that edges will carry the dependencies (rule exists, or rule is removed). Edges could also carry actions (insert rule, delete rule), but that could possibly also be done by nodes. What is better? What if we have logical functions in the graph, e.g. a logical or? This can also be represented. What about usage? It is clear that usage depends on certain rules to be present. However, also the opposite is true, e.g. dropping a rule may depend on the rule no longer being used.
 
-There are two basic problems with dependency graphs. First, they may contain cycles, e.g. the triangle example for loop-free routing with multiple destinations. These cycles must be broken, and there are several ways to do this: One my for instance add helper nodes into the graph that for instance break conflicting rules into subrules. TODO: one may go through the triangle example to explain this. Another technique to break cycles is to introduce version numbers. Version numbers in particular help if a rule needs to wait for another rule to be removed first. Just introduce a version number, and then it is clear which of the conflicting rules should be used. 
+There are two basic problems with dependency graphs. First, they may contain cycles, e.g. the triangle example for loop-free routing with multiple destinations. These cycles must be broken, and there are several ways to do this: One my for instance add helper nodes into the graph that for instance break conflicting rules into subrules. TODO: one may go through the triangle example to explain this. Another technique to break cycles is to introduce version numbers. Version numbers in particular help if a rule needs to wait for another rule to be removed first. Just introduce a version number, and then it is clear which of the conflicting rules should be used.
 
-There is also a helping scheme in order not to wait for another rule to be in place already: Also here we include additional information in the packet, namely the information what the node that did not install the necessary rule yet should do with the packet when it receives it (and does not know what to do with it). 
+There is also a helping scheme in order not to wait for another rule to be in place already: Also here we include additional information in the packet, namely the information what the node that did not install the necessary rule yet should do with the packet when it receives it (and does not know what to do with it).
 
 Version numbers also help flattening the dependency graph. With version numbers, one may be able to break long dependency chains, and the ``add all new rules first, using a new version number, and once that is done, use them'' paradigm shortens dependencies in a simple way.
 
@@ -32,9 +31,6 @@ Problem: Reaction time to failures and updates. A central controller is often sl
 Synchronization is an overloaded term, unfortunately. On the one hand we have something like (physical) clock synchronization, on the other hand we have (logical) synchronization. Perfect physical synchronization is impossible, so people often do logical synchronization. This is also what we do here or in SWAN.
 
 Or, to put it differently, as nodes cannot all migrate to the new version at exactly the same instance (and packets might be in transit still, and what not), we need a way to do a ``save transition'' from the old to the new state.
-=======
-\paragraph{Dependencies vs. time} It is clear that less dependencies improve an update process, as slow or unreachable nodes will slow down less less nodes. However, if all nodes respond timely, less dependence may actually slow down the update process.
->>>>>>> b3c7e0fc742ea021afcbaebc9fcc9f0348e30c5e
 
 One other question is regarding time, in particular, how bad is the worst-case updates. Consider a $n$-node network with a ring topology. In the old regime, all nodes point clockwise to destination $d$. In the new regime, all nodes point counter-clockwise to destination $d$. Let us call clockwise neighbor of $d$ node $u_1$, the clockwise neighbor of $u_i$ is node $u_{i+1}$. In other words, the counter-clockwise neighbor of $d$ is node $u_{n-1}$. In this example, the dependency forest is a linked list $u_1,u_2,\ldots,u_{n-1}$, in other words, if the dependency forest is synchronized with a SDN controller, no matter where in the ring network the SDN controller is located, $\Theta(n^2)$ messages are going to be exchanged before the network adopted the new solution. This is the worst example, as the dependency forest cannot be worse than a linked list.
 
