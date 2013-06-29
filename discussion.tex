@@ -7,6 +7,10 @@
 
 \paragraph{Dependency graphs}
 
+TODO, read one more time!
+
+\footnote{Moreover, if we switch the rules of node $u$ in Figure \ref{fig:minimal}, such that \texttt{u.old = w} and \texttt{u.new = d}, we have another interesting case: Now, in order to prevent a loop, node $v$ must wait, but node $v$ may wait for either node $u$ \emph{or} node $w$. These examples show that optimality is a non-trivial concept that deserves further research.}
+
 In general, software defined networks should not be modeled by mere rules or rule changes, but rather by \emph{rule dependencies}. As we showed in this paper, rules often depend on each other, before a new rule can be used, one must make sure that other rules are already in place, or that other rules are being removed. These rule dependencies in general form a directed graph we call the dependency graph, as follows:
 
 TODO: Not clear how to describe the graph. Do nodes do something, or are they just there? It is clear that edges will carry the dependencies (rule exists, or rule is removed). Edges could also carry actions (insert rule, delete rule), but that could possibly also be done by nodes. What is better? What if we have logical functions in the graph, e.g. a logical or? This can also be represented. What about usage? It is clear that usage depends on certain rules to be present. However, also the opposite is true, e.g. dropping a rule may depend on the rule no longer being used.
