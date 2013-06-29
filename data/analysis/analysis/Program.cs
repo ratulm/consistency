@@ -18,8 +18,8 @@ namespace analysis
 
         Dictionary<string, int> nodes = new Dictionary<string,int>();
 
-        //dest->source
-        Dictionary<string, Dictionary<string, int>> links = new Dictionary<string,Dictionary<string,int>>();
+        //dest->[source, cost]
+        Dictionary<string, List<Tuple<string, double>>> revLinks = new Dictionary<string, List<Tuple<string,double>>>();
 
         Random random = new Random();
 
@@ -28,6 +28,44 @@ namespace analysis
             fileName = args[0];
 
             ParseFile(fileName);
+
+            //write the total number of nodes
+            Console.WriteLine("{0}", nodes.Count);
+
+            //pick a random destination and write it to file
+            string destination = GetNodeFromIndex(random.Next(nodes.Count));
+            Console.Error.WriteLine("Picked destination: {0}", destination);
+            Console.WriteLine("{0}", nodes[destination]);
+
+            //compute and print paths
+            var originalPaths = ComputeShortestPaths(destination);
+
+            PrintPaths(originalPaths, "0");
+
+            //pick a link to fail
+            string linkDest = GetNodeFromIndex(random.Next(nodes.Count));
+
+            // ... don't pick a link with one neighbor
+            while (revLinks[linkDest].Count < 2)
+            {
+                linkDest = GetNodeFromIndex(random.Next(nodes.Count));
+            }
+
+            //.... pick a neighbor
+            var linkIndex = random.Next(revLinks[linkDest].Count);
+            var linkSrcTuple = revLinks[linkDest][linkIndex];
+
+            Console.Error.WriteLine("Removed link: {0}->{1}", linkSrcTuple.Item1, linkDest);
+
+            //remove the links
+            revLinks[linkDest].RemoveAt(linkIndex);
+
+            //compute and print paths again
+            var newPaths = ComputeShortestPaths(destination);
+
+            PrintPaths(newPaths, "1");
+
+            //Console.ReadLine();
         }
 
         void ParseFile(string fileName)
@@ -44,48 +82,28 @@ namespace analysis
                 RegisterNode(tokens[0]);
                 RegisterNode(tokens[1]);
 
-                AddLink(tokens[1], tokens[0], int.Parse(tokens[2]));
+                AddReverseLink(tokens[1], tokens[0], double.Parse(tokens[2]));
             }
-
-            //write the total number of nodes
-            Console.WriteLine("{0}", nodes.Count);
-
-            //pick a random destination and write it to file
-            string destination = GetNodeFromIndex(random.Next(nodes.Count));
-            Console.WriteLine("{0}", destination);
-
-            //compute and print paths
-            var originalPaths = ComputeShortestPaths(destination, links);
-
-            PrintPaths(originalPaths, "0");
-
-            //pick a link to fail
-            string linkDest = GetNodeFromIndex(random.Next(nodes.Count));
-
-            // ... don't pick a link with one neighbor
-            while (links[linkDest].Count < 2)
-            {
-                linkDest = GetNodeFromIndex(random.Next(nodes.Count));
-            }
-
-            //.... pick a neighbor
-            string linkSrc = GetNodeFromIndex(random.Next(links[linkDest].Count));
-
-            //remove the links
-            links[linkDest].Remove(linkSrc);
-
-            //compute and print paths again
-            var newPaths = ComputeShortestPaths(destination, links);
-
-            PrintPaths(newPaths, "1");
-
         }
 
-        private void PrintPaths(Dictionary<string, Tuple<string, int>> paths, string type)
+        private void PrintPaths(Dictionary<string, Tuple<string, double>> paths, string type)
         {
             foreach (var source in paths.Keys)
             {
-                Console.WriteLine("{0} {1} {2}", source, paths[source].Item1, type);
+                if (paths[source].Item1 == null)
+                {
+                    Console.Error.WriteLine("{0} does not have a path", source);
+                    continue;
+                }
+
+                if (paths[source].Item1.Equals(source))
+                {
+                    Console.Error.WriteLine("skipping {0} as it appears to be the destination", source);
+                    continue;
+                }
+
+                Console.WriteLine("{0},{1},{2} {3}", nodes[source], nodes[paths[source].Item1], type, paths[source].Item2);
+                //Console.WriteLine("{0},{1},{2}", nodes[source], nodes[paths[source].Item1], type);
             }
         }
 
@@ -107,51 +125,51 @@ namespace analysis
                 nodes.Add(nodeName, nodes.Count);                
         }
 
-        private void AddLink(string node1, string node2, int cost)
+        private void AddReverseLink(string dest, string src, double cost)
         {
-            if (!links.ContainsKey(node1))
-                links.Add(node1, new Dictionary<string, int>());
+            if (!revLinks.ContainsKey(dest))
+                revLinks.Add(dest, new List<Tuple<string, double>>());
 
-            links[node1].Add(node2, cost);
+            revLinks[dest].Add(new Tuple<string, double>(src, cost));
         }
 
         //source->(nexthop, cost)
-        private Dictionary<string, Tuple<string, int>> ComputeShortestPaths(string destination, Dictionary<string, Dictionary<string, int>> links)
+        private Dictionary<string, Tuple<string, double>> ComputeShortestPaths(string destination)
         {
-            var paths = new Dictionary<string, Tuple<string, int>>();
+            var paths = new Dictionary<string, Tuple<string, double>>();
 
             //first initialize the paths
             foreach (var source in nodes.Keys)
             {
                 if (source.Equals(destination))
-                   paths.Add(source, new Tuple<string, int>(source, 0));
+                   paths.Add(source, new Tuple<string, double>(source, 0));
                 else 
-                   paths.Add(source, new Tuple<string,int>(null, int.MaxValue));
+                   paths.Add(source, new Tuple<string,double>(null, double.MaxValue));
             }
 
             bool somethingChanged = true;
 
             while (somethingChanged)
             {
-                foreach (var source in links.Keys)
+                somethingChanged = false;
+
+                //pick a node and "advertise" its path to all its upstream neighbors
+                foreach (var node in revLinks.Keys)
                 {
-                    int leastCost = paths[source].Item2;
-
-                    foreach (var neighbor in links[source].Keys)
+                    foreach (var upNbrTuple in revLinks[node])
                     {
-                        int newCost = paths[neighbor].Item2 + links[source][neighbor];
+                        double currCost = paths[upNbrTuple.Item1].Item2;
 
-                        if (newCost < leastCost)
+                        double newCost = paths[node].Item2 + upNbrTuple.Item2;
+
+                        if (newCost < currCost)
                         {
                             somethingChanged = true;
 
-                            paths[source] = new Tuple<string, int>(neighbor, newCost);
-
-                            leastCost = newCost;
+                            paths[upNbrTuple.Item1] = new Tuple<string, double>(node, newCost);
                         }
                     }
                 }
-
             }
 
             return paths;
