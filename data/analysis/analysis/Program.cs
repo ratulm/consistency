@@ -102,8 +102,8 @@ namespace analysis
                     continue;
                 }
 
-                Console.WriteLine("{0},{1},{2} {3}", nodes[source], nodes[paths[source].Item1], type, paths[source].Item2);
-                //Console.WriteLine("{0},{1},{2}", nodes[source], nodes[paths[source].Item1], type);
+                //Console.WriteLine("{0},{1},{2} {3}", nodes[source], nodes[paths[source].Item1], type, paths[source].Item2);
+                Console.WriteLine("{0},{1},{2}", nodes[source], nodes[paths[source].Item1], type);
             }
         }
 
