@@ -1,0 +1,2 @@
+for asn in 1221 1755 3967 1239 3257 6461; do echo $asn; for i in 1 2 3 4 5 6 7 8 9 10; do ./analysis/analysis/analysis.exe $asn/weights.intra > python/Files/rules.txt; cd python; python Consistency.py; cat Files/forest.txt >> ../$asn.txt ; cd ..; done ; done
+
