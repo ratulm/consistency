@@ -1,11 +1,17 @@
-\section{Discussion}
+\section{Towards a general architecture for network updates}
 \label{sec:discussion}
 
-\subsection{A general abstraction of network updates}
+In a conventional view of SDNs, the primary responsibility of the controller is viewed as generating switch rules that are compliant with policy. We argue that maintaining consistency during network updates is another key responsibility. The question is how should this be accomplished in a modular manner. One possibility is for the same software module, which decides on new rules, to micro manage switch updates such that the desired consistency is ensured. However, this monolithic architecture is undesirable because it mixes three separable concerns--- $i)$ the network should route traffic per policy; $ii)$ the network should maintain consistency during updates; $iii)$ the updates should be as fast as possible, which depends on the network model (e.g., the mean and variance of applying an update to a switch). 
 
-\paragraph{Dependency primitive in switches}
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/arch.png}\\
+  \caption{Our proposed architecture}\label{fig:arch}
+\end{figure}
 
-\paragraph{Dependency graphs}
+We propose an alternative architecture, which is shown in Figure~\ref{fig:arch}. It is composed of three (logical) modules or steps that correspond to each of the three concerns above. The first is the {\em rule generator}, which generates new switch rules that comply with network policy. The second is {\em update graph generator}, which generates a graph of network updates such as applying updates in that order ensures the desired consistency property. The {\em update graph} is a general abstraction for network updates; we describe it in more detail below. The final module is the {\em update graph applier} that is responsible for quickly applying the updates.
+
+----
 
 In general, software defined networks should not be modeled by mere rules or rule changes, but rather by \emph{rule dependencies}. As we showed in this paper, rules changes often depend on each other, before a new rule can be used, one must make sure that other rules are already in place, or that other rules are being removed. These rule dependencies in general form a directed graph we call the dependency graph, as follows: The nodes of the dependency graph are rule changes, e.g. insert, remove, or change a rule at some node. These nodes are connected by directed edges that represent dependencies between rule changes. If a node does not have an edge pointing to it, the rule can be implemented immediately.
 
@@ -22,32 +28,29 @@ The other main reason for dependency graphs is efficiency: Not only do they allo
 So, the general procedure is as follows: First, the new rules are used to compute a dependency graph. This graph is then checked for cycles, which are eliminated using various techniques such as rule splitting or version numbers. Then the resulting cycle-free dependency graph (DAG) is fed into an optimizer, which speeds up conversion at the cost of introducing more memory, version numbers, direct update information between nodes, source routing, helper nodes, or other mechanisms. We end up with a flat dependency DAG, which can be directly implemented in the network.
 
 
-Some additional snippets:
+%Some additional snippets:
+%
+%The nodes in this graph are rules and they point to other rules that must be updated before them to guarantee loop freedom. While these graphs can be computed using an algorithm similar to the one above \ratul{true? need more details -- }, we cannot use the same update procedure that goes from roots to leafs. Instead, special care is needed for updating portions of the graph that form cycles.
+%
+%Nodes in a cycle can be updated in two ways. The first is using Reitblatt's procedure, which relies in version numbers for "atomically switching" a set of nodes. Another is to "break the cycles" by using helper rules that control subsets of the address space, thus removing the overlap. In the example above, \ratul{finish}.
+%
+%Which of the two methods is preferable depends on the context and other procedures may exist as well.
+%
+%Let's analyze it. There are only two reasons why we need network algorithms and protocols and the first place, first failures, second changes in either demand or infrastructure; if everything would be stable forever, there is no need to react (have protocols). In this work we essentially concentrate on the second (changes which can be planned). The first is also interesting, but mostly beyond the scope of this work. (This is where Ratul disagrees, and he is probably right.)
+%
+%Problem: Reaction time to failures and updates. A central controller is often slower than a distributed protocol, as it might be farther away, and the source of the problem/change is often close to those components that are most affected by a problem/change. Nevertheless, that’s again a failure problem. Is the only reason to use distributed protocols failure handling?
+%
+%(This is what this paper is about.) The answer is no. There is also synchronization. Even in the absence of failures, one cannot have nodes of a network migrate to a new version of operation at the very same instant. In theory, the last statement is trivial. In practice, clearly one tries to get as close as possible to optimal synchronization. Clearly, having an SDN helps a lot, as migration in heterogeneous networks is a whole different battle (this is another thing we discussed), as global updates of standard protocols show. However, even if the system is homogeneous, (time) synchronization is difficult [firing squad, or clock synchronization].
+%
+%Synchronization is an overloaded term, unfortunately. On the one hand we have something like (physical) clock synchronization, on the other hand we have (logical) synchronization. Perfect physical synchronization is impossible, so people often do logical synchronization. This is also what we do here or in SWAN.
+%
+%Or, to put it differently, as nodes cannot all migrate to the new version at exactly the same instance (and packets might be in transit still, and what not), we need a way to do a ``save transition'' from the old to the new state.
+%
 
-The nodes in this graph are rules and they point to other rules that must be updated before them to guarantee loop freedom. While these graphs can be computed using an algorithm similar to the one above \ratul{true? need more details -- }, we cannot use the same update procedure that goes from roots to leafs. Instead, special care is needed for updating portions of the graph that form cycles.
-
-Nodes in a cycle can be updated in two ways. The first is using Reitblatt's procedure, which relies in version numbers for "atomically switching" a set of nodes. Another is to "break the cycles" by using helper rules that control subsets of the address space, thus removing the overlap. In the example above, \ratul{finish}.
-
-Which of the two methods is preferable depends on the context and other procedures may exist as well. 
-
-Let's analyze it. There are only two reasons why we need network algorithms and protocols and the first place, first failures, second changes in either demand or infrastructure; if everything would be stable forever, there is no need to react (have protocols). In this work we essentially concentrate on the second (changes which can be planned). The first is also interesting, but mostly beyond the scope of this work. (This is where Ratul disagrees, and he is probably right.)
-
-Problem: Reaction time to failures and updates. A central controller is often slower than a distributed protocol, as it might be farther away, and the source of the problem/change is often close to those components that are most affected by a problem/change. Nevertheless, that’s again a failure problem. Is the only reason to use distributed protocols failure handling?
-
-(This is what this paper is about.) The answer is no. There is also synchronization. Even in the absence of failures, one cannot have nodes of a network migrate to a new version of operation at the very same instant. In theory, the last statement is trivial. In practice, clearly one tries to get as close as possible to optimal synchronization. Clearly, having an SDN helps a lot, as migration in heterogeneous networks is a whole different battle (this is another thing we discussed), as global updates of standard protocols show. However, even if the system is homogeneous, (time) synchronization is difficult [firing squad, or clock synchronization].
-
-Synchronization is an overloaded term, unfortunately. On the one hand we have something like (physical) clock synchronization, on the other hand we have (logical) synchronization. Perfect physical synchronization is impossible, so people often do logical synchronization. This is also what we do here or in SWAN.
-
-Or, to put it differently, as nodes cannot all migrate to the new version at exactly the same instance (and packets might be in transit still, and what not), we need a way to do a ``save transition'' from the old to the new state.
-
-
-\paragraph{Dependency primitive in switches}
-
-\paragraph{Dependency graphs}
 
 First, what happens if the network is in the middle of a transition, and the SDN controller decides to update some rules (that might or might not have been rolled out already)? This can be integrated easily in the algorithm described above. In a nutshell, we just need to consider all rules that are possibly still existing in the network as old rules. As such, a node $u$ may have several old rules, pointing to different neighbors, plus one new rule. If some node $u$ was in limbo state before the new update was rolled out, it may have used either its old rule, or the intermediate rule (formerly known as new rule, now overwritten by the new rule). We know that mixing old and intermediate rules did not cause any loops, and as such we can treat both of them as old rules. If some rules have already been deleted, or have not been initiated, they can be ignored. Note that our algorithm also works in the presence of a whole set of old rules, and as such, it can automatically handle updates that interrupt transitions.
 
-A main cause for interrupting updates may be failures at nodes or edges. Essentially, failures may be handled in a standard way, by simply rolling out another batch of rules that will fix the failures. However, there is one exception, which we will first describe with an example: If some link $l$ is considered to be down, new rules will be introduced to route around this failed link $l$. An old rule on link $l$ might have a loop with some of the new rules, and as such the algorithm cannot push the new rules before the old rule is removed. Even worse, if the node $u$ holding the old rule is not accessible, the algorithm will not be able to push the fixing rules before node $u$ is reachable again. The SDN controller has a conflict of interest, it needs to quickly push a fix which must ignore (delete) the old rule, however, if unreachable node $u$ comes up again while doing so, the existing old rule will introduce a loop. (TODO: must be re-written, I just wanted to describe the problem.)
+%A main cause for interrupting updates may be failures at nodes or edges. Essentially, failures may be handled in a standard way, by simply rolling out another batch of rules that will fix the failures. However, there is one exception, which we will first describe with an example: If some link $l$ is considered to be down, new rules will be introduced to route around this failed link $l$. An old rule on link $l$ might have a loop with some of the new rules, and as such the algorithm cannot push the new rules before the old rule is removed. Even worse, if the node $u$ holding the old rule is not accessible, the algorithm will not be able to push the fixing rules before node $u$ is reachable again. The SDN controller has a conflict of interest, it needs to quickly push a fix which must ignore (delete) the old rule, however, if unreachable node $u$ comes up again while doing so, the existing old rule will introduce a loop. (TODO: must be re-written, I just wanted to describe the problem.)
 
 
 %Some additional snippets:

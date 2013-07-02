@@ -3,15 +3,22 @@
 
 1.	SDNs are receiving a lot of attention in the research and practitioner communities.
 
-2.	Looking back the seminal papers, key motivations for SDNs were
-a.	Simplify dynamic behavior of protocols (e.g., possibility for loops and overloads created during the period in which routing protocols are converging)
-b.	Maintain consistency across concerns spread across different layers (e.g., firewall policies should be in sync with routing policy as routing changes)
+From early papers on SDNs~\cite{rcp-case,rcp,4d,ethane}, we learn that the primary motivations for the SDN paradigm was that centralized computation of network behavior allows us to eliminate the ill-effects (e.g., oscillations and loops) of distributed computation based on partial views and make it easier to compute and implement behaviors that satisfy a wide range of policy concerns.
 
-3.	However, as researchers are looking more closely at SDNs, we are learning that the story is not that straightforward.  While centralized computation of SDNs makes it much easy to devise globally consistent or efficient routing policies, it does not by itself solve the fundamental issue of consistency during changes in policy.  For example:
-a.	SWAN shows temporary overload can occur
-b.	Atomic updates shows that firewall policies can be violated
+For example, consider the Routing Control Platform (RCP)~\cite{rcp-case,rcp}, one of the first proposals that separated the control and data plane of routers. It used a centralized control plane that directly configured the routers in an autonomous system (AS). The primary motivations for this organization were "problems such as protocol oscillations and persistent loops"~\cite{rcp} that can occur in certain iBGP architectures. These problems occur when different routers have different views of network state.
 
-4.	While individual papers have uncovered problems specific to their context, we take a holistic view of the design space.
+The 4D work has a direct, general argument for an SDN-like architecture~\cite{4d}. It aims to simplify network management. It observes that the "data plane needs to implement, in addition to next-hop forwarding, functions such as tunneling, access control, address translation, and queuing." These functions are implemented using separate processes and it is hard to keep them in sync. "For example, controlling routing and reachability today requires complex arrangements of commands to tag routes, filter routes, and configure multiple interacting routing processes, all the while ensuring that no router is asked to handle more routes and packet filters than it has resources to cope with. A change to any one part of the configuration can easily break other parts." Based on this observation, it argues for centrally computing data plane state in way that obeys all concerns.
+
+ETHANE was aimed at simplifying the management of enterprise networks. It argues that this goal requires, in addition to a high-level policy language and binding packets to their origins, that "policy should determine the path that packets follow." It then employs a centralized control plane, noting that the requirements of network management "are complex and require strong consistency, making it quite hard to compute in a distributed manner."
+
+These promises SDNs have led to them garnering a lot of attention from the research and practitioner communities; however, as we understand this paradigm better, a nuanced story is emerging.  Some researchers have shown that, even when using SDNs, packets can take paths that do not comply with policy~\cite{safeupdate,xx}, and some other researchers have shown that using SDNs can lead to more traffic arriving at a link than its capacity~\cite{swan}.
+
+The gap between the original promises and contradictory behaviors can be explained by the fact that the promised were made about the eventual behavior of the network, {\em after} data plane state has been changed, but the contradictory behaviors occur {\em during} data plane state changes. Since changes to data plane state, in response to failures, load changes, and policy changes, are an essential part of an operational network, so are the contradictory behaviors. Thus, successfully using SDNs means that we not only need flexible means for computing policy-compliant data plane state,  but also need mechanisms to manage changes to the state in a way that complies with policy.
+
+Beyond the specific contradictory behaviors and solutions studies by prior work~\cite{safeupdate,swan}, we present a holistic analysis of such behaviors and what is fundamentally needed to prevent them.
+
+We do not mean to imply that SDNs are not a net positive towards tackling the problems they aim to tackle. We merely wish to highlight that the story (i.e., use centralized computation) is not that straightforward.
+
 
 5.	First, we outline a spectrum of consistency properties:
 a.	Drop-freedom
