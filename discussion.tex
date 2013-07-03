@@ -1,7 +1,7 @@
 \section{Towards a general architecture for network updates}
 \label{sec:discussion}
 
-In a conventional view of SDNs, the primary responsibility of the controller is viewed as generating switch rules that are compliant with policy. We argue that maintaining consistency during network updates is another key responsibility. The question is how should this be accomplished in a modular manner. One possibility is for the same software module, which decides on new rules, to micro manage switch updates such that the desired consistency is ensured. However, this monolithic architecture is undesirable because it mixes three separable concerns--- $i)$ the network should route traffic per policy; $ii)$ the network should maintain consistency during updates; $iii)$ the updates should be as fast as possible, which depends on the network model (e.g., the mean and variance of applying an update to a switch). 
+In a conventional view of SDNs, the primary responsibility of the controller is limited to generating switch rules that are policy-complian, but we have argued that maintaining consistency during rule updates is another key responsibility. The question is how should this be accomplished in a flexible, modular manner. One possibility is for the same software module to decides on new rules and then micro manage updates while ensuring consistency. However, this monolithic architecture is undesirable because it mixes three separable concerns--- $i)$ the network should route traffic per policy; $ii)$ the network should maintain consistency during updates; $iii)$ the updates should be efficient, which depends on the network characteristics (e.g., the mean and variance of applying an update to a switch).
 
 \begin{figure}[t!]
   \centering
@@ -9,9 +9,11 @@ In a conventional view of SDNs, the primary responsibility of the controller is 
   \caption{Our proposed architecture}\label{fig:arch}
 \end{figure}
 
-We propose an alternative architecture, which is shown in Figure~\ref{fig:arch}. It is composed of three (logical) modules or steps that correspond to each of the three concerns above. The first is the {\em rule generator}, which generates new switch rules that comply with network policy. The second is {\em update graph generator}, which generates a graph of network updates such as applying updates in that order ensures the desired consistency property. The {\em update graph} is a general abstraction for network updates; we describe it in more detail below. The final module is the {\em update graph applier} that is responsible for quickly applying the updates.
+We propose an alternative architecture, shown in Figure~\ref{fig:arch}. It is composed of three parts, corresponding to the three concerns above: $i)$ the {\em rule generator} produces new switch rules that comply with network policy; $ii)$ the {\em update plan generator} produces a plan for updating the network to the new rules in a way that ensures consistency per the desired property; and $iii)$  the {\em plan optimizer and executor} that is responsible for efficiently updating the network per the plan.
 
-----
+We also propose that the update plan be represented using an {\em update DAG}. \ratul{formal-ish definition goes here}
+
+---------
 
 In general, software defined networks should not be modeled by mere rules or rule changes, but rather by \emph{rule dependencies}. As we showed in this paper, rules changes often depend on each other, before a new rule can be used, one must make sure that other rules are already in place, or that other rules are being removed. These rule dependencies in general form a directed graph we call the dependency graph, as follows: The nodes of the dependency graph are rule changes, e.g. insert, remove, or change a rule at some node. These nodes are connected by directed edges that represent dependencies between rule changes. If a node does not have an edge pointing to it, the rule can be implemented immediately.
 
