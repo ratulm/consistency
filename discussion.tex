@@ -19,7 +19,7 @@ In general, software defined networks should not be modeled by mere rules or rul
 
 Depending on the application, one may add several special nodes to increase the functionality of the dependency graph. A general problem are slow packets in transit. For instance, the packet coherence protocol by Reitblatt et al.~\cite{safeupdates} may remove old rules while packets using these rules are in still transit. Concretely, consider a packet $p$ in transit from $y$ to $x$ in the example of Figure \ref{fig:example}. If node $x$ already passed the last step of the consistency protocol~\cite{safeupdates} and removed the old rule when receiving packet $p$, node $x$ has not other option than dropping packet $p$ once it arrives. A simple technique to deal with packets in transit is adding reasonable timers before removing old rules, i.e. by adding a node in the dependency graph that demands to ``wait 10 seconds'' that points to the node that removes the old rule.
 
-Also, sometimes nodes that incorporate logical functions may be helpful. As an example, switch the rules of node $u$ in Figure \ref{fig:minimal}, such that \texttt{u.old = w} and \texttt{u.new = d}. Then, in order to prevent a loop, node $v$ must wait, but node $v$ may wait for either node $u$ \emph{or} node $w$. In the dependency graph, one may now choose to include either the dependency between $u$ and $v$, or the dependency between $w$ and $v$. Even though both are correct, the dependency graph allows a better solution, as we can just include an ``or'' node, connecting the insertions of the new rules at $u$ and $w$ with the new rule at $v$, and then $v$ just needs to wait for the faster of $u$ and $w$.
+Also, sometimes nodes that incorporate logical functions may be helpful. As an example, switch the rules of node $u$ in Figure \ref{fig:minimal}, such that $u.old = w$ and $u.new = d$. Then, in order to prevent a loop, node $v$ must wait, but node $v$ may wait for either node $u$ \emph{or} node $w$. In the dependency graph, one may now choose to include either the dependency between $u$ and $v$, or the dependency between $w$ and $v$. Even though both are correct, the dependency graph allows a better solution, as we can just include an ``or'' node, connecting the insertions of the new rules at $u$ and $w$ with the new rule at $v$, and then $v$ just needs to wait for the faster of $u$ and $w$.
 
 However, the main reason for dependency graphs is that they allow for a general understanding of the consistency of SDN updates. First, as our prefix routing example in Section \label{ref:multidest} showed, dependencies might have cycles, and a dependency graph is a perfect means to understand these cycles in a formal way. One might decide to eliminate these cycles by simply removing dependency edges, with the advantage to completely understand that exactly these removed consistency properties will be violated by doing so. But one can also handle cycles without violating consistency. In the example in Figure \ref{fig:multidest}, for instance, one can eliminate the cycle by breaking a single (default) rule into one for each of the two destinations covered by the default rule. TODO: describe details if needed?
 
@@ -29,6 +29,11 @@ The other main reason for dependency graphs is efficiency: Not only do they allo
 
 So, the general procedure is as follows: First, the new rules are used to compute a dependency graph. This graph is then checked for cycles, which are eliminated using various techniques such as rule splitting or version numbers. Then the resulting cycle-free dependency graph (DAG) is fed into an optimizer, which speeds up conversion at the cost of introducing more memory, version numbers, direct update information between nodes, source routing, helper nodes, or other mechanisms. We end up with a flat dependency DAG, which can be directly implemented in the network.
 
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/as.png}\\
+  \caption{Test loop freedom}\label{fig:as}
+\end{figure}
 
 %Some additional snippets:
 %

@@ -44,7 +44,7 @@
 
   \textbf{Loop freedom}
 &
-  \multicolumn{2}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma X)}
+  \multicolumn{2}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma \ref{lemma:imp loop-free})}
 &
   Rule dep. forest (\S\ref{sec:minimal})
 &
@@ -54,7 +54,7 @@
 
   \textbf{Packet coherence}
 &
-  \multicolumn{3}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma Y)}
+  \multicolumn{3}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma \ref{lemma:imp packet coherence})}
 &
   Per-flow ver. numbers
 &
@@ -63,7 +63,7 @@
 
   \textbf{Bandwidth limit}
 &
-  \multicolumn{4}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma Z)}
+  \multicolumn{4}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma \ref{lemma:imp bandwidth limit})}
 &
   Staged partial moves~\cite{swan}
 \ \\ \hline
@@ -138,6 +138,6 @@ At the other extreme, bandwidth limit requires global coordination. The intuitio
 
 Interestingly, all cells to the immediate right of impossible cells are occupied, which implies that, across past work and this paper,  (qualitatively) optimal algorithms for maintain all these consistency properties are known. However, one must not infer from this observation that finding consistent update procedures is a ``solved problem'' at this point.  As we mentioned previously, some networks may need different properties and algorithms will need to be developed for those properties.
 
-Even amongst this set of properties, the rosy picture that emerges is partly due to the rows focusing on consistency properties in isolation. The combinations are hard to  ensure, and efficient algorithms are not known. For instance, drop freedom and memory limit, while easy to ensure individually, are challenging to ensure in combination. Maintaining the combination requires global dependencies, as introducing some rule at a switch might need to remove another rule first, which can only be removed after having added a new rule somewhere else. 
+Even amongst this set of properties, the rosy picture that emerges is partly due to the rows focusing on consistency properties in isolation. The combinations are hard to  ensure, and efficient algorithms are not known. For instance, drop freedom and memory limit, while easy to ensure individually, are challenging to ensure in combination. Maintaining the combination requires global dependencies, as introducing some rule at a switch might need to remove another rule first, which can only be removed after having added a new rule somewhere else.
 
 Last not least, the table only shows the qualitative part of the story, ignoring the more interesting quantitative effects. Even though \cite{safeupdate} and \cite{swan} both have global dependencies, \cite{safeupdate} can always resolve the dependencies in only two rounds, whereas \cite{swan} may provably need more stages in certain instances. We believe that what is presented in this and prior work is just the tip of iceberg when it comes to consistent updates in SDNs.
