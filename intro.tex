@@ -10,27 +10,18 @@ For example, the Routing Control Platform (RCP)~\cite{rcp-case,rcp} was motivate
 
 Similarly, ETHANE argued that for simplified management of enterprise networks ``policy should determine the path that packets follow"~\cite{ethane}. It then argued for SDNs because the requirements of network management ``are complex and require strong consistency, making it quite hard to compute in a distributed manner." These promises have led to SDNs garnering a lot of attention from the researchers as well as practitioners.
 
-However, as we gain more experience with this paradigm, a nuanced story is emerging.  Researchers have shown that, even with SDNs, packets can take paths that do not comply with policy~\cite{safeupdate,xx} and that more traffic can arrive at a link than its capacity~\cite{swan}. So, what explains this gap between the promise and these inconsistencies. The root cause is that promises apply to the eventual behavior of the network, {\em after} data plane state has been changed and the inconsistencies emerge {\em during} data plane state changes.
+However, as we gain more experience with this paradigm, a nuanced story is emerging.  Researchers have shown that, even with SDNs, packets can take paths that do not comply with policy~\cite{safeupdate} and that more traffic can arrive at a link than its capacity~\cite{swan}. So, what explains this gap between the promise and these inconsistencies. The root cause is that promises apply to the eventual behavior of the network, {\em after} data plane state has been changed and the inconsistencies emerge {\em during} data plane state changes.
 
-Since changes to data plane state, in response to failures, load changes, and policy changes, are an essential part of an operational network, so will be the inconsistencies. Thus, successfully using SDNs means that we need not only methods for computing policy-compliant data plane state but also methods to manage state changes in a way that maintains desired consistency properties.
+Since changes to data plane state, in response to failures, load changes, and policy changes, are an essential part of an operational network, so will be the inconsistencies. Thus, successful use of SDNs requires not only methods to compute policy-compliant data plane state but also methods to change that state in a way that maintains desired consistency properties.
 
-Beyond the specific contradictory behaviors and solutions studies by prior work~\cite{safeupdate,swan}, we present a holistic analysis of such behaviors and what is fundamentally needed to prevent them.
+%Going beyond the specific inconsistencies and their solutions considered by prior work~\cite{safeupdate,swan}, this paper presents a broader view of this challenge. 
 
-We do not mean to imply that SDNs are not a net positive towards tackling the problems they aim to tackle. We merely wish to highlight that the story (i.e., use centralized computation) is not that straightforward.
+In this paper, we take a broad view of this aspect of SDNs. A basic challenge in consistently updating a network is coordinating rule updates (i.e., changes in data plane state) across multiple switches.  Atomic (i.e., simultaneous) updates to the rules of multiple switches is difficult and uncoordinated updates can lead to inconsistencies such as packet loops and drops. This means that when a given rule can be updated at a switch depends on what rules are present at other switches, and in some cases, these dependencies can be circular.
 
+We consider a spectrum of possible consistency properties, including those in prior work~\cite{safeupdate,swan}, and analyze them with respect to the dependency structures they necessarily induce. 
+%Through a mix of simple impossibility results and concrete algorithms (some of which are new) from prior work and some we develop),  that can maintain a given consistency property, 
+We show that dependency structures are simpler for weaker consistency properties and more intricate for stronger properties.  For instance, while maintaining drop freedom (i.e., no packet should be dropped during updates) does not introduce any dependency amongst switches, maintaining packet coherence~\cite{safeupdates} (i.e., no packet should see a mix of old and new rules) makes rules at a switch depend on all other switches in the network.  
 
-5.	First, we outline a spectrum of consistency properties:
-a.	Drop-freedom
-b.	Loop-freedom
-c.	Per-pkt consistency
-d.	Capacity consistency
-e.	…..
+We also take a detailed view of one particular consistency property---loop freedom, which implies that  no packet should loop during updates---and develop two new update algorithms that induce less intricate dependency structures than currently known algorithms~\cite{safeupdate}. One of our algorithms is provably  optimal with respect to the dependencies it induces.
 
-6.	Consistently migrating requires a careful planning of the order in which rules can be installed in the network. This means a dependence in which certain rules should be applied only after certain other rules have been applied.  Based on the observation, we outline a spectrum of the types of possible dependencies:
-a.	None
-b.	Downstream of the path
-c.	Entire network
-
-7.	Greater dependence slows transition. But certain consistency properties inherently require a minimum degree of dependence. We fill out the table …
-
-8.	We propose new transition algorithms along the way
+Motivated by the observations of our analysis, we also sketch a general architecture for consistent network updates. This architecture separates across different software modules the two concerns that are primary during network updates: maintaining  consistency and quickly updating the network. Given the consistency property of interest, the first module is responsible for computing a correct plan for updating the network. The update plan is represented as a directed acyclic graph in which nodes are rule updates and edges represent their dependencies.  The second module is responsible for quickly applying the plan based on the properties of the network such as the time it takes for the switches to apply updates and distances between the controller and switches. Preliminary experimental results highlight the value of this architecture as well challenges in implementing it. 
