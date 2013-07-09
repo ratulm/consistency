@@ -1,5 +1,6 @@
 \begin{table*}[t!]
 \begin{center}
+\begin{small}
 \begin{tabular}{>{\centering\arraybackslash}p{0.7in}|>{\centering\arraybackslash}m{0.75in}|>{\centering\arraybackslash}p{0.8in}|>{\centering\arraybackslash}p{0.85in}|>{\centering\arraybackslash}p{0.85in}|>{\centering\arraybackslash}p{0.75in}|}
 &
   \textbf{None}
@@ -13,7 +14,7 @@
   \textbf{Global}
 \ \\ \hline
 
-  \textbf{Eventual}
+  \textbf{Eventual consistency}
 &
   Always guaranteed
 &
@@ -44,7 +45,7 @@
 
   \textbf{Loop freedom}
 &
-  \multicolumn{2}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma \ref{lemma:imp loop-free})}
+  \multicolumn{2}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma \iflongversion \ref{lemma:imp loop-free} \else 6 \fi )}
 &
   Rule dep. forest (\S\ref{sec:minimal})
 &
@@ -54,7 +55,7 @@
 
   \textbf{Packet coherence}
 &
-  \multicolumn{3}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma \ref{lemma:imp packet coherence})}
+  \multicolumn{3}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma \iflongversion \ref{lemma:imp packet coherence} \else 7 \fi)}
 &
   Per-flow ver. numbers
 &
@@ -63,13 +64,20 @@
 
   \textbf{Bandwidth limit}
 &
-  \multicolumn{4}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma \ref{lemma:imp bandwidth limit})}
+  \multicolumn{4}{>{\columncolor[gray]{0.8}}c|}{Impossible (Lemma  \iflongversion \ref{lemma:imp bandwidth limit} \else 8 \fi)}
 &
   Staged partial moves~\cite{swan}
 \ \\ \hline
 \end{tabular}
+\end{small}
 \end{center}
-\caption{Some basic consistency properties and their dependencies.}
+\caption{Some basic consistency properties and their dependencies. Proofs of lemmas are in 
+\iflongversion
+the Appendix.
+\else
+~\cite{tr}.
+\fi
+}
 \label{tbl:big}
 \end{table*}
 

@@ -1,10 +1,34 @@
 
-\begin{figure}[t!]
-\includegraphics[width=3in]{figures/noloops.png}
-\caption{Example scenario discussed in \S\ref{sec:example}. \ratul{better figures?}]
-}
+\begin{figure*}[t!]
+\begin{minipage}[b]{2.1in}
+\centering
+\includegraphics[width=2.1in]{figures/noloops.png}
+\caption{Illustrating loop freedom (\S\ref{sec:loop-free}).}
 \label{fig:example}
-\end{figure}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{2.1in}
+\centering
+\includegraphics[width=2.1in]{figures/nominimum.png}
+\caption{Illustrating multiple minimal solutions (\S\ref{sec:minimal}).}
+\label{fig:minimal}
+\end{minipage}
+\hfill
+\begin{minipage}[b]{2.1in}
+\centering
+\includegraphics[width=2.1in]{figures/multidest.png}
+\caption{Illustrating circular dependencies in prefix routing (\S\ref{sec:multidest}).}
+\label{fig:multidest}
+\end{minipage}
+\end{figure*}
+
+
+%\begin{figure}[t!]
+%\includegraphics[width=3in]{figures/noloops.png}
+%\caption{Example scenario discussed in \S\ref{sec:loop-free}.
+%}
+%\label{fig:example}
+%\end{figure}
 
 \section{Loop Freedom}
 \label{sec:loop-free}
@@ -35,7 +59,7 @@ A related, fundamental question is: for a given consistency property of interest
 
 %(Assume for now that rules correspond to unique destinations, as in tunnel-based routing. We discuss later rules that have overlapping destinations, as in prefix-based routing.)
 
-Our procedure can be understood in terms of a {\em dependency tree} in which a node can safely switch to using new rules after its parent has switched. Thus, a given node only depends on its ancestors for switching, and any slowdowns elsewhere in the network have no impact on its ability to switch. 
+Our procedure can be understood in terms of a {\em dependency tree} in which a node can safely switch to using new rules after its parent has switched. Thus, a given node only depends on its ancestors for switching, and any slowdowns elsewhere in the network have no impact on its ability to switch.
 For simplicity, we first describe our procedures as if there was just a single destination $d$, and then later discuss the case of multiple destinations. A valid dependency tree is for instance the destination rooted in-tree with respect to the new set of rules. In this tree, the destination is the root, and a node $c$ is a child of $p$ iff the new rule of $c$ points to $p$. In our example, this is the tree shown on the right in Figure \ref{fig:example}.
 
 A simple update procedure is then as follows: starting with the root of a destination-rooted dependency tree, successively update the children, pursuing the branches in parallel.
@@ -52,11 +76,11 @@ It is easy to see that this procedure guarantees loop freedom: Nodes that are in
 
 
 
-\begin{figure}[t!]
-\includegraphics[width=3in]{figures/nominimum.png}
-\caption{Example with two orthogonal minimal solutions, discussed in Section \ref{sec:minimal}.}
-\label{fig:minimal}
-\end{figure}
+%\begin{figure}[t!]
+%\includegraphics[width=3in]{figures/nominimum.png}
+%\caption{Example with two orthogonal minimal solutions, discussed in Section \ref{sec:minimal}.}
+%\label{fig:minimal}
+%\end{figure}
 
 \subsection{A minimal procedure}
 \label{sec:minimal}
@@ -84,22 +108,28 @@ Tarjan's algorithm \cite{tarjan72}. As this algorithm does not only detect loops
 
 %TODO: alternative formulation, shorter, maybe better: Initially, we let all good nodes to be roots of the dependency forest. Then, iteratively, while not all nodes are processed, we process an arbitrary good node $u$ by removing its old rule. Removing $u$'s old rule might turn other nodes good; if $v$ turns good when processing $u$, then $v$ is a child of $u$ in the dependency forest.
 
-Once a dependency forest is computed, we update the individual dependency trees in parallel. For this procedure above, we can prove that the computed dependency forest is correct (that is, applying updates based on them guarantees loop-freedom) and minimal. We include the proofs in the Appendix. Regarding efficiency, the loop-finding subroutine can be done in time linear in the size of the network. Since we must process each node, and check for each not yet processed node when doing so, the total time of the algorithm is cubic in the size of the network.\footnote{We suspect that this running time can be improved, but this is beyond the scope of this paper.}
+Once a dependency forest is computed, we update the individual dependency trees in parallel. For this procedure above, we can prove that the computed dependency forest is correct (that is, applying updates based on them guarantees loop-freedom) and minimal. Proofs are available in 
+\iflongversion
+the Appendix.
+\else
+a separate report~\cite{tr}. 
+\fi
+Regarding efficiency, the loop-finding subroutine can be done in time linear in the size of the network. Since we must process each node, and check for each not yet processed node when doing so, the total time of the algorithm is cubic in the size of the network.\footnote{We suspect that this running time can be improved, but this is beyond the scope of this paper.}
 
 \subsection{Multiple destinations}
 \label{sec:multidest}
 
-While we described the procedures above in terms of a single destination node, their correctness and optimality properties hold in the presence of multiple destinations as long as rules are per-destination. This setting maps to layer 2 routing, which uses MAC addresses as destinations, or tunnel-based routing, which users tunnel identifiers as destinations. (The two large-scale SDNs described in recent literature use tunnel-based routing~\cite{swan,b4}.) Here, we can compute dependency trees or forests for each destination separately and apply updates in parallel.
+While we described the procedures above in terms of a single destination node, their correctness and optimality hold directly in the presence of multiple destinations if rules are per-destination. This setting maps to layer 2 routing, which uses MAC addresses as destinations, or tunnel-based routing, which users tunnel identifiers as destinations. (The two large-scale SDNs described in recent literature use tunnel-based routing~\cite{swan,b4}.) Here, we can compute dependency trees or forests for each destination separately and apply updates in parallel.
 
-\begin{figure}[t!]
-\includegraphics[width=3in]{figures/multidest.png}
-\caption{Example with multiple destinations, discussed in Section \ref{sec:multidest}.}
-\label{fig:multidest}
-\end{figure}
+%\begin{figure}[t!]
+%\includegraphics[width=3in]{figures/multidest.png}
+%\caption{Example with multiple destinations (\S\ref{sec:multidest}).}
+%\label{fig:multidest}
+%\end{figure}
 
-A more complex case is where individual rules control routing to multiple destinations, where different rules correspond to overlapping sets of destinations. (If the destination sets do not overlap, the situation is similar to that of single destination rules, if we replace destination sets with a virtual destination.) This situation can emerge in prefix-based routing in the presence of varying prefix lengths and longest-prefix matching. In this case, no (loop-free) dependency forests may exist. Consider for instance a triangle network with three nodes and destinations $u,v,w$ in Figure \ref{fig:multidest}. The old routing is always clockwise, for two hops. The new routing is counter-clockwise, also for two hops. In other words, in both the old and the new solution, on each of the three links, two destinations are bundled into one \emph{default} rule. Now, no matter which of the new counter-clockwise rules is initiated first, we immediately generate a loop for one destination.
+A more complex case is where individual rules control routing to multiple destinations and different rules control overlapping sets of destinations. (For non-overlapping destination sets, the situation is similar to above, if we replace destination sets with a virtual destination.) This situation can emerge in prefix-based routing and longest-prefix matching. In this case, no (loop-free) dependency forests may exist. Consider, for instance, a triangle network in Figure \ref{fig:multidest}. Each node has two rules: one for itself as the destination and one default rule (which will cover the other two destinations).  In the old routing, default rules point clockwise. In the new routing, they point counter-clockwise. Now, no matter which of the new default rule rule is changed first, we immediately cause a loop for some destination.
 
-We can capture such dependencies by broadening from dependency forests to {\em dependency graphs}. We will discuss them in Section~\ref{sec:discussion}, after getting a better understanding of the consistency space.
+We can capture such circular dependencies using {\em rule dependency graphs}. We discuss them in \S\ref{sec:discussion}, after getting a better understanding of the consistency space.
 
 
 %In this case, optimality/minimality may be defined in different ways, as some sub-prefixes of prefix $p$ at node $u$ may be good earlier than others. For example, it may be that prefix $p0$ will be good immediately, as it remains unchanged, whereas prefix $p1$ will end up in a loop if we switch immediately. One may now say that the new rule for prefix $p$ should be split up into two rules $p0$ and $p1$, making it possible to switch at least $p0$ immediately. Then the solution above is straight-forward, as we just split up the addressing space into all the necessary minimal sub-prefixes, computing dependency forests for all of them independently. However, even though this solution is in some sense time-minimal, it may be space-inefficient since new rules may now be split up into sub-prefix rules.

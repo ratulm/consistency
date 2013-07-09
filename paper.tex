@@ -1,3 +1,10 @@
+
+\newif\iflongversion
+% To use shorter version, comment out this line...
+%\longversiontrue
+% and uncomment this line:
+\longversionfalse
+
 \documentclass{sig-alternate-10pt-2013}
 \usepackage[usenames,dvipsnames]{color}
 \definecolor{mycitegreen}{RGB}{0,90,0}
@@ -8,7 +15,7 @@
 \usepackage{graphics,enumitem}
 \usepackage{epsfig}
 \usepackage{graphicx}
-\usepackage{floatrow}
+%\usepackage{floatrow}
 \usepackage[font={bf,small}]{caption}
 \usepackage[captionskip=0pt, font={small,bf}, farskip=2pt]{subfig}
 \usepackage{multirow}
@@ -134,6 +141,7 @@ Paper \#XX, YY pages
 
 
 \begin{sloppypar}
+\input{abstract}
 \input{intro}
 %\input{background}
 \input{example}
@@ -150,9 +158,11 @@ Paper \#XX, YY pages
 }
 %\bibliographystyle{plain}
 
+\iflongversion
 \begin{appendix}
 \input{appendix}
 \end{appendix}
+\fi
 
 \end{sloppypar}
 \end{document}
