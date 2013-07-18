@@ -1,4 +1,4 @@
-\section{Towards a general architecture for network updates}
+\section{An architecture for SDN updates}
 \label{sec:discussion}
 
 In a conventional view of SDNs, the primary responsibility of the controller is to generate switch rules that are policy-compliant, but we have argued that maintaining consistency during rule updates is another key responsibility. The question is how this should be accomplished in a flexible, modular manner. One possibility is for the same software module to decide on new rules and then micro manage updates while ensuring consistency. However, this monolithic architecture is undesirable because it mixes three separable concerns--- $i)$ the network should route traffic per policy; $ii)$ the network should maintain consistency during updates; $iii)$ the updates should be efficient, which depends on the network characteristics (e.g., the mean and variance of applying an update to a switch).
@@ -52,7 +52,7 @@ We have started implementing the architecture above. Our initial focus is on loo
 
 Figure~\ref{fig:as} plots the distribution of the length of dependency chains that emerge for each topology across ten trials, where a single randomly selected link was failed in each, and update DAGs were computed using the minimal procedure in \S\ref{sec:minimal}. We see that roughly half of the updates depend on 0 or 1 other switch, and 90\% of all rules are dependent on at most 3 other switches. In contrast, had we used Reitblatt's procedure, which provides the stronger property of packet coherence, rules would have had to wait for all other switches (well over hundred in some topologies), and a single slow switch can impede everyone.
 
-We also see a small fraction of cases with chain lengths greater than 5. These are prime candidates for implementation through localized chain shortening optimizations by the plan executor (and the plan generator can exclusively focus on maintaining loop freedom) 
+We also see a small fraction of cases with chain lengths greater than 5. These are prime candidates for implementation through localized chain shortening optimizations by the plan executor (and the plan generator can exclusively focus on maintaining loop freedom)
 
 
 \begin{figure}[t!]
