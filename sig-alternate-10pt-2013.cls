@@ -1038,12 +1038,12 @@
 }
 \def\section{%
     \@startsection{section}{1}{\z@}{-9\p@ \@plus -4\p@ \@minus -2\p@}% GM
-    {4\p@}{\baselineskip 14pt\secfnt\@ucheadtrue}%
+    {2\p@}{\baselineskip 14pt\secfnt\@ucheadtrue}%
 }
 
 \def\subsection{%
     \@startsection{subsection}{2}{\z@}{-7\p@ \@plus -2\p@ \@minus -\p@}
-    {3\p@}{\secfnt}%
+    {1\p@}{\secfnt}%
 }
 \def\subsubsection{%
     \@startsection{subsubsection}{3}{\z@}{-6\p@ \@plus -2\p@ \@minus -\p@}%
