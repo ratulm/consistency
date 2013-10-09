@@ -5,7 +5,7 @@ In the following, we prove a few simple lemmas, which show that $i)$ the depende
 \begin{lemma}\label{lemma:invariant} The invariant of the algorithm is that the current rules in the network are without loops.
 \end{lemma}
 
-\begin{proof} The invariant is true at the beginning, since no new rule is included, and the old rules form an in-tree to the destination $d$. The invariant remains true when a node enters the limbo state (uses both old and new rules) as we check at this stage that no loop is introduced when doing so. Finally, the statement is true as well when a node enters the new state: As this only removes an old rule, no loop can be introduced.
+\begin{proof} The invariant is true at the beginning, since no new rule is included, and the old rules form an in-tree to the destination $d$. The invariant remains true when a node enters the limbo state (uses both old and new rules) as we check at this stage that no loop is introduced when doing so. Finally, the invariant is true as well when a node enters the new state: As this only removes an old rule, no loop can be introduced.
 \end{proof}
 
 \begin{lemma}\label{lemma:loop-free} The dependency forest is loop-free.
@@ -17,22 +17,22 @@ In the following, we prove a few simple lemmas, which show that $i)$ the depende
 \begin{lemma}\label{lemma:forest} At the end, every node (but the destination $d$) is in the dependency forest.
 \end{lemma}
 
-\begin{proof} As long as there are nodes in limbo state, we will move them to the new state, one after the other, possibly moving other nodes from old to limbo. What if no node remains in limbo state, i.e. all nodes are either new or old. Then, as the algorithm suggests, there is always at least one node which can directly jump from old state to new state. We can find this node as follows: Start from an arbitrary old node, and move along the new rules towards the destination $d$. Since the destination is (by definition) new, along this new-rules path, there must be a last pair of nodes $c,p$, where $c.new = p$, $c$ and $p$ are old and new, respectively. Node $c$ can directly move to state new, $c$'s parent in the dependency forest is $p$. Removing $c$'s old rule will not introduce a loop, as removing a rule never introduces new loops. Also, adding $c$'s new rule does not introduce a loop, as it points to nodes which are in the new state already, that is, there are no more old rules which can cause loops.
+\begin{proof} As long as there are nodes in limbo state, we will move them to the new state, one after the other, possibly moving other nodes from old to limbo. What if no node remains in limbo state, i.e. all nodes are either new or old? Then, as the algorithm suggests, there is always at least one node which can directly jump from old to new. We can find this node as follows: Start from an arbitrary old node, and move along the new rules towards the destination $d$. Since the destination is (by definition) new, along this new-rules path, there must be a last pair of nodes $c,p$, where $c.new = p$, $c$ and $p$ are old and new, respectively. Node $c$ can directly move to state new, $c$'s parent in the dependency forest is $p$. Removing $c$'s old rule will not introduce a loop, as removing a rule never introduces loops. Also, adding $c$'s new rule does not introduce a loop, as $c.new$ points to nodes which are in the new state already, that is, there are no more old rules which can cause loops.
 \end{proof}
 
-Note that are networks where this jumping mechanism is necessary. Example: A network with three nodes, where $u.old = v$, $u.new = d$, $v.old = d$, and $v.new = u$. Either of the nodes $u,v$ cannot enter the limbo state, as there will be a loop between $u$ and $v$.
+Note that there are networks where this jumping mechanism is necessary. Example: A network with three nodes, where $u.old = v$, $u.new = d$, $v.old = d$, and $v.new = u$. Either of the nodes $u,v$ cannot enter the limbo state, as there will be a loop between $u$ and $v$.
 
 \begin{lemma}\label{lemma:correctness} The process is correct (and produces no loops).
 \end{lemma}
 
-\begin{proof} The follows directly from the dependency tree, as we only added nodes once they did not introduce a loop (Lemma \ref{lemma:invariant}).
+\begin{proof} The follows directly from Lemmas \ref{lemma:invariant}, \ref{lemma:loop-free} and \ref{lemma:forest}.
 \end{proof}
 
 \begin{lemma}\label{lemma:minimal} The process is minimal.
 \end{lemma}
 
 \begin{proof}
-Root nodes in the dependency forest can flip to the new rule immediately, and are as such by definition optimal. A node $c$ is a child of a parent node $p$ in the dependency tree, exactly because $c$ can only use its new rule after $p$ removed its old rule. As such, the process guaranteed that $c$ was added to the dependency tree at the earliest possible (minimal) time.
+Root nodes in the dependency forest can flip to the new rule immediately, and are as such by definition optimal. A node $c$ is a child of a parent node $p$ in the dependency forest, exactly because $c$ can only use its new rule after $p$ removed its old rule. As such, the process guaranteed that $c$ was added to the dependency tree at the earliest possible (minimal) time.
 \end{proof}
 
 \section{Appendix for \S3}
