@@ -5,6 +5,7 @@
 % and uncomment this line:
 \longversionfalse
 
+%\documentclass{sig-alt-hotnetscr}
 \documentclass{sig-alternate-10pt-2013}
 \usepackage[usenames,dvipsnames]{color}
 \definecolor{mycitegreen}{RGB}{0,90,0}
@@ -79,12 +80,26 @@
 
 \numberofauthors{2}
 \author{
-Ratul Mahajan (Microsoft Research)\\
-\and
-Roger Wattenhofer (ETH Zurich)\\
+\begin{tabular}{cc}
+Ratul Mahajan 
+&
+Roger Wattenhofer 
+\\
+\affaddr{Microsoft Research}
+&
+\affaddr{ETH Zurich}
+\end{tabular}
 }
 
 \begin{document}
+
+\iflongversion
+\else
+\conferenceinfo{Hotnets '13,} {November 21--22, 2013, College Park, MD, USA.} \CopyrightYear{2013} \crdata{xxx}
+\fi
+
+\clubpenalty=10000
+\widowpenalty = 10000
 
 \maketitle
 %\baselineskip=12bp
@@ -144,6 +159,19 @@ Roger Wattenhofer (ETH Zurich)\\
 
 \begin{sloppypar}
 \input{abstract}
+
+\iflongversion
+\else
+\begin{small}
+\vspace{3pt}
+\paragraphb{Categories and Subject Descriptors:} C.2.1 [Computer-Communication Networks]: Network Architecture and Design
+\vspace{-2pt}
+\paragraphb{General Terms:} Algorithms
+%\vspace{-2pt}
+%\paragraphb{Keywords:} Inter-DC WAN; software-defined networking
+\end{small}
+\fi
+
 \input{intro}
 %\input{background}
 \input{example}
