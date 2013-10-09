@@ -1,7 +1,9 @@
 \section{An architecture for SDN updates}
 \label{sec:discussion}
 
-In a conventional view of SDNs, the primary challenge is to generate policy-compliant switch rules; we have argued that maintaining consistency during rule updates is another key challenge. The question is: how can we accomplish this in a flexible, efficient manner? A straightforward possibility is for the same software module (controller) to decide on new rules and then micro manage the update process in a way that maintains consistency. However, this monolithic architecture is undesirable because it mixes three separable concerns--- $i)$ the rule set should policy-compliant; $ii)$ rules updates should maintain the desired consistency property; $iii)$ the updates process should be efficient, which depends on detailed network characteristics (e.g., the mean and variance of applying an update to a switch).
+%In a conventional view of SDNs, the primary challenge is to generate policy-compliant switch rules; 
+
+We have argued that maintaining consistency during rule updates is a key hurdle towards realizing the promise of SDNs. The question is: how can we accomplish this in a flexible, efficient manner? A straightforward possibility is for the same software module (controller) to decide on new rules and then micro manage the update process in a way that maintains consistency. This monolithic architecture is undesirable because it mixes three separable concerns--- $i)$ the rule set should policy-compliant; $ii)$ rules updates should maintain the desired consistency property; $iii)$ the updates process should be efficient, which depends intimately on network characteristics (e.g., the mean and variance of applying an update to a switch).
 
 \begin{figure}[t!]
   \centering
@@ -14,7 +16,7 @@ In a conventional view of SDNs, the primary challenge is to generate policy-comp
 
 We propose an alternative architecture (Figure~\ref{fig:arch}) with three parts, one for each concern above: $i)$ the {\em rule generator} produces policy-compliant rules; $ii)$ the {\em update plan generator} produces a plan for applying those rules in a way that ensures consistency; and $iii)$  the {\em plan optimizer and executor} executes the plan efficiently.\footnote{In analogy to programs, compilers, and runtimes, the first part declaratively specifies the desired network state, the second produces instructions to safely update the network, and the third part executes the instructions efficiently, taking into account the properties of the underlying hardware.}
 
-We represent the update plan using an {\em update DAG} (directed acyclic graph), in which nodes are updates (i.e., rule additions, deletions, or changes) and directed edges are dependencies between updates. Updates that do not have an edge pointing to them can be implemented immediately.
+We represent the update plan using an {\em update DAG} (directed acyclic graph) in which nodes are updates (i.e., rule additions, deletions, or changes) and directed edges are dependencies between updates. Updates that do not have an inbound edge can be implemented immediately.
 
 Using only updates as nodes does not capture all types of dependencies. Safe application of some updates requires time delays; e.g., in ~\cite{safeupdate}, rules with old version numbers can be removed only after time to drain in-transit packets has elapsed. Further, some updates may have dependencies such that they can be applied when any one of their parents have been applied; e.g., switch the rules of node $u$ in Figure \ref{fig:minimal} such that $u.old = w$ and $u.new = d$. Then, in order to prevent a loop, node $v$ must wait  for either $u$ \emph{or} $w$, not both.
 %it does not need to wait for both, and we shouldn't make it wait for both when applying updates.
@@ -26,7 +28,7 @@ Using only updates as nodes does not capture all types of dependencies. Safe app
 
 To generally handle such dependencies, we introduce {\em combinator nodes} into the update DAG. Current combinators include delay and logical functions. A delay combinator is considered applied (i.e., its dependent updates can be now applied) after the specified time has elapsed since its parent updates were applied. A logical combinator is a logical function (e.g., AND or OR) over the binary state (applied or not) of its parents. It is considered applied when the function evaluates to true. These two combinators suffice to efficiently represent update plans for all procedures in Table~\ref{tbl:big}; future work may uncover the need for additional combinators.
 
-\paragraphb{The update plan generator} proceeds in two steps. It first computes, using the old rules, new rules, and the desired consistency property, a {\em rule dependency graph} where nodes correspond to deletion of old rules or addition of new rules. It then converts this graph into an update DAG such that, starting from the old rules, applying the DAG leads to new rules. 
+\paragraphb{The update plan generator} proceeds in two steps. It first computes, using the old rules, new rules, and the desired consistency property, a {\em rule dependency graph} where nodes correspond to deletion of old rules or addition of new rules. It then converts this graph into an update DAG such that, starting from the old rules, applying the DAG leads to new rules.
 
 This second step is straightforward if the graph is cycle-free; otherwise, we must break cycles. How this should be done depends on the consistency property, but a few general tools exist. One is using version numbers~\cite{safeupdate}, which help when a new rule must wait for an old rule to be removed. Introducing version numbers makes it clear which of the (otherwise) conflicting rules should be used. As an extension, if one is not willing to wait for a rule to be inserted, additional information (similar to source routing) may be embedded in the packet as to how it should be handled downstream  and the circular dependency vanishes.
 
@@ -57,7 +59,9 @@ We have a preliminary implementation of the architecture above. Our focus thus f
 
 Figure~\ref{fig:as} plots the distribution of the length of dependency chains that emerge across ten trials, where a randomly selected link was failed in each, and update DAGs were computed using the procedure in \S\ref{sec:minimal}. We see that roughly half of the updates depend on 0 or 1 other switch, and 90\% of all rules are dependent on at most 3 other switches. In contrast, had we used Reitblatt's procedure~\cite{safeupdate}, which ensures the stronger property of packet coherence, rules would have had to wait for all other switches (well over a hundred in some cases), and a single slow switch can impede everyone.
 
-We also see a small fraction of cases with chain lengths greater than 5. These are prime candidates for implementation through localized chain shortening optimizations by the plan executor (and the plan generator can exclusively focus on maintaining loop freedom)
+We also see a small fraction of cases with chain lengths greater than 5. These are prime candidates for implementation through localized chain shortening optimizations by the plan executor.
+
+% (and the plan generator can exclusively focus on maintaining loop freedom)
 
 
 \begin{figure}[t!]
