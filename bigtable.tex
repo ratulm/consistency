@@ -102,7 +102,7 @@ Thus far, we have focused on loop freedom; we now take a broader view of the ran
 
 The consistency properties we list are not the only ones of interest.
 %In some applications, one may be happy with eventual consistency, the weakest consistency property possible that just guarantees that eventually, all switches will be following the new rules, and then the network is by definition consistent again.
-Some networks may require different properties (e.g., balanced load across two links), and some others may require  guarantees that combine two or more properties (e.g., packet coherence + bandwidth limits). We chose these consistency properties because they are basic and natural, capturing the basic expectations of the experience of packets and network elements.
+Some networks may require different properties (e.g., balanced load across two links), and some others may require  guarantees that combine two or more properties (e.g., packet coherence + memory limits~\cite{naga}). We chose these consistency properties because they are basic and natural, capturing the basic expectations of the experience of packets and network elements.
 
 The consistency properties are listed in rough order of strength, and satisfying a property lower on the list often (but not always) satisfies a property above it. Obviously, packet coherence implies drop and loop freedom (assuming that the old and new rules sets are free of drops and loops). Perhaps less obviously, bandwidth limits imply loop freedom because flows in a loop will likely surpass any bandwidth limit.
 
